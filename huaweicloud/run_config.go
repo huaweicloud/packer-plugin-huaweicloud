@@ -277,6 +277,7 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		}
 	}
 
+	c.UseBlockStorageVolume = true
 	if c.UseBlockStorageVolume {
 		// Use Compute instance availability zone for the Block Storage volume
 		// if it's not provided.
