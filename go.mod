@@ -1,4 +1,4 @@
-module github.com/zengchen1024/packer-builder-huaweicloud-ecs
+module github.com/huaweicloud/packer-builder-huaweicloud-ecs
 
 go 1.13
 
