@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/packer/packer/plugin"
-	"github.com/zengchen1024/packer-builder-huaweicloud-ecs/huaweicloud"
+	"github.com/huaweicloud/packer-builder-huaweicloud-ecs/huaweicloud"
 )
 
 func main() {
