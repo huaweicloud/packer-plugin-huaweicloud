@@ -37,6 +37,6 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
        # Artifact name
-       name: huaweicloud-ecs
+       name: packer-builder-huaweicloud-ecs
        # Directory containing files to upload
-       path: ~/.packer.d/plugins/
+       path: $GOPATH/bin
