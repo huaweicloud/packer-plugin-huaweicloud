@@ -286,7 +286,7 @@ func (c *AccessConfig) imageV2Client() (*gophercloud.ServiceClient, error) {
 }
 
 func (c *AccessConfig) blockStorageV3Client() (*gophercloud.ServiceClient, error) {
-	return openstack.NewBlockStorageV3(c.osClient, gophercloud.EndpointOpts{
+	return openstack.NewBlockStorageV2(c.osClient, gophercloud.EndpointOpts{
 		Region:       c.Region,
 		Availability: c.getEndpointType(),
 	})
