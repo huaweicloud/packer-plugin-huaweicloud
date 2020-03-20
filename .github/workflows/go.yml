@@ -26,6 +26,7 @@ jobs:
       run: |
         go get -v -t -d ./...
         if [ -f Gopkg.toml ]; then
+            export INSTALL_DIRECTORY="gopath"
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
@@ -39,4 +40,4 @@ jobs:
        # Artifact name
        name: packer-builder-huaweicloud-ecs
        # Directory containing files to upload
-       path: $GOPATH/bin
+       path: gopath/bin
