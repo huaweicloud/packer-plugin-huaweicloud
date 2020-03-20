@@ -3,8 +3,8 @@
 This is a [HashiCorp Packer](https://www.packer.io/) plugin for creating [Huawei Cloud ECS](https://www.huaweicloud.com/) image.
 
 ## Requirements
-* [Packer](https://www.packer.io/intro/getting-started/install.html)
-* [Go 1.12+](https://golang.org/doc/install)
+* [Packer 1.5.4](https://www.packer.io/intro/getting-started/install.html)
+* [Go 1.13+](https://golang.org/doc/install)
 
 ## Build & Installation
 
