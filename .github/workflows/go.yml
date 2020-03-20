@@ -26,8 +26,10 @@ jobs:
       run: |
         go get -v -t -d ./...
         if [ -f Gopkg.toml ]; then
-            export INSTALL_DIRECTORY="gopath"
+
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            echo "gopath: $(go env GOPATH)"
+            export gopath="$(go env GOPATH)"
             dep ensure
         fi
 
