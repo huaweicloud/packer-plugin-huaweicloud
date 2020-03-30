@@ -42,4 +42,4 @@ jobs:
        # Artifact name
        name: packer-builder-huaweicloud-ecs
        # Directory containing files to upload
-       path: gopath/bin
+       path: .
