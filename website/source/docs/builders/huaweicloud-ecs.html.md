@@ -44,6 +44,8 @@ builder.
     
 -   `tenant_name` (string) - The project name to build resources in Huawei Cloud.
 
+-   `availability_zone` (string) - The availability zone to build resources in Huawei Cloud.
+
 -   `domain_name` (string) - The Domain name to build resources in Huawei Cloud.
 
 -   `insecure` (bool) - Whether or not the connection to Huawei Cloud can be done over an insecure connection. By default this is false.
