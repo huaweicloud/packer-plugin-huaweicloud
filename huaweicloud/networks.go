@@ -5,18 +5,18 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/pagination"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/attachinterfaces"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/external"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/networks"
+	"github.com/huaweicloud/golangsdk/pagination"
 )
 
 // CheckFloatingIP gets a floating IP by its ID and checks if it is already
 // associated with any internal interface.
 // It returns floating IP if it can be used.
-func CheckFloatingIP(client *gophercloud.ServiceClient, id string) (*floatingips.FloatingIP, error) {
+func CheckFloatingIP(client *golangsdk.ServiceClient, id string) (*floatingips.FloatingIP, error) {
 	floatingIP, err := floatingips.Get(client, id).Extract()
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func CheckFloatingIP(client *gophercloud.ServiceClient, id string) (*floatingips
 
 // FindFreeFloatingIP returns free unassociated floating IP.
 // It will return first floating IP if there are many.
-func FindFreeFloatingIP(client *gophercloud.ServiceClient) (*floatingips.FloatingIP, error) {
+func FindFreeFloatingIP(client *golangsdk.ServiceClient) (*floatingips.FloatingIP, error) {
 	var freeFloatingIP *floatingips.FloatingIP
 
 	pager := floatingips.List(client, floatingips.ListOpts{
@@ -67,7 +67,7 @@ func FindFreeFloatingIP(client *gophercloud.ServiceClient) (*floatingips.Floatin
 // GetInstancePortID returns internal port of the instance that can be used for
 // the association of a floating IP.
 // It will return an ID of a first port if there are many.
-func GetInstancePortID(client *gophercloud.ServiceClient, id string, instance_float_net string) (string, error) {
+func GetInstancePortID(client *golangsdk.ServiceClient, id string, instance_float_net string) (string, error) {
 
 	selected_interface := 0
 
@@ -97,7 +97,7 @@ func GetInstancePortID(client *gophercloud.ServiceClient, id string, instance_fl
 
 // CheckFloatingIPNetwork checks provided network reference and returns a valid
 // Networking service ID.
-func CheckFloatingIPNetwork(client *gophercloud.ServiceClient, networkRef string) (string, error) {
+func CheckFloatingIPNetwork(client *golangsdk.ServiceClient, networkRef string) (string, error) {
 	if _, err := uuid.Parse(networkRef); err != nil {
 		return GetFloatingIPNetworkIDByName(client, networkRef)
 	}
@@ -112,7 +112,7 @@ type ExternalNetwork struct {
 }
 
 // GetFloatingIPNetworkIDByName searches for the external network ID by the provided name.
-func GetFloatingIPNetworkIDByName(client *gophercloud.ServiceClient, networkName string) (string, error) {
+func GetFloatingIPNetworkIDByName(client *golangsdk.ServiceClient, networkName string) (string, error) {
 	var externalNetworks []ExternalNetwork
 
 	allPages, err := networks.List(client, networks.ListOpts{

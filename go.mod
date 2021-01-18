@@ -4,8 +4,6 @@ go 1.13
 
 require (
 	github.com/google/uuid v1.1.1
-	github.com/gophercloud/gophercloud v0.2.0
-	github.com/gophercloud/utils v0.0.0-20190124192022-a5c25e7a53a6
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/packer v1.5.5
 	github.com/huaweicloud/golangsdk v0.0.0-20191114112852-e18c07dc2fc0

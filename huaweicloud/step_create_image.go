@@ -6,13 +6,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/extensions/volumeactions"
+	"github.com/huaweicloud/golangsdk/openstack/blockstorage/extensions/volumeactions"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 type stepCreateImage struct {
@@ -45,7 +45,7 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	// Block Storage service volume or regular Compute service local volume.
 	ui.Say(fmt.Sprintf("Creating the image: %s", config.ImageName))
 	var imageId string
-	var blockStorageClient *gophercloud.ServiceClient
+	var blockStorageClient *golangsdk.ServiceClient
 	if s.UseBlockStorageVolume {
 		// We need the v3 block storage client.
 		blockStorageClient, err = config.blockStorageV3Client()
@@ -118,7 +118,7 @@ func (s *stepCreateImage) Cleanup(multistep.StateBag) {
 }
 
 // WaitForImage waits for the given Image ID to become ready.
-func WaitForImage(ctx context.Context, client *gophercloud.ServiceClient, imageId string) error {
+func WaitForImage(ctx context.Context, client *golangsdk.ServiceClient, imageId string) error {
 	maxNumErrors := 10
 	numErrors := 0
 
@@ -128,7 +128,7 @@ func WaitForImage(ctx context.Context, client *gophercloud.ServiceClient, imageI
 		}
 		image, err := images.Get(client, imageId).Extract()
 		if err != nil {
-			errCode, ok := err.(*gophercloud.ErrUnexpectedResponseCode)
+			errCode, ok := err.(*golangsdk.ErrUnexpectedResponseCode)
 			if ok && (errCode.Actual == 500 || errCode.Actual == 404) {
 				numErrors++
 				if numErrors >= maxNumErrors {

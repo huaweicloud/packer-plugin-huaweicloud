@@ -66,7 +66,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 		b.config.InstanceName = b.config.ImageName
 	}
 
-	packer.LogSecretFilter.Set(b.config.Password)
+	//packer.LogSecretFilter.Set(b.config.Password)
 	return nil, nil, nil
 }
 

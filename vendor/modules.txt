@@ -99,31 +99,6 @@ github.com/golang/snappy
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
-# github.com/gophercloud/gophercloud v0.2.0
-github.com/gophercloud/gophercloud
-github.com/gophercloud/gophercloud/internal
-github.com/gophercloud/gophercloud/openstack
-github.com/gophercloud/gophercloud/openstack/blockstorage/extensions/volumeactions
-github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes
-github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/attachinterfaces
-github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume
-github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs
-github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/startstop
-github.com/gophercloud/gophercloud/openstack/compute/v2/flavors
-github.com/gophercloud/gophercloud/openstack/compute/v2/images
-github.com/gophercloud/gophercloud/openstack/compute/v2/servers
-github.com/gophercloud/gophercloud/openstack/identity/v2/tenants
-github.com/gophercloud/gophercloud/openstack/identity/v2/tokens
-github.com/gophercloud/gophercloud/openstack/identity/v3/tokens
-github.com/gophercloud/gophercloud/openstack/imageservice/v2/images
-github.com/gophercloud/gophercloud/openstack/imageservice/v2/members
-github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external
-github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips
-github.com/gophercloud/gophercloud/openstack/networking/v2/networks
-github.com/gophercloud/gophercloud/openstack/utils
-github.com/gophercloud/gophercloud/pagination
-# github.com/gophercloud/utils v0.0.0-20190124192022-a5c25e7a53a6
-github.com/gophercloud/utils/openstack/clientconfig
 # github.com/hashicorp/consul v1.4.0
 github.com/hashicorp/consul/api
 # github.com/hashicorp/errwrap v1.0.0
@@ -207,6 +182,15 @@ github.com/hashicorp/yamux
 github.com/huaweicloud/golangsdk
 github.com/huaweicloud/golangsdk/internal
 github.com/huaweicloud/golangsdk/openstack
+github.com/huaweicloud/golangsdk/openstack/blockstorage/extensions/volumeactions
+github.com/huaweicloud/golangsdk/openstack/blockstorage/v3/volumes
+github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/attachinterfaces
+github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/bootfromvolume
+github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs
+github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop
+github.com/huaweicloud/golangsdk/openstack/compute/v2/flavors
+github.com/huaweicloud/golangsdk/openstack/compute/v2/images
+github.com/huaweicloud/golangsdk/openstack/compute/v2/servers
 github.com/huaweicloud/golangsdk/openstack/identity/v2/tenants
 github.com/huaweicloud/golangsdk/openstack/identity/v2/tokens
 github.com/huaweicloud/golangsdk/openstack/identity/v3/domains
@@ -214,7 +198,12 @@ github.com/huaweicloud/golangsdk/openstack/identity/v3/endpoints
 github.com/huaweicloud/golangsdk/openstack/identity/v3/projects
 github.com/huaweicloud/golangsdk/openstack/identity/v3/services
 github.com/huaweicloud/golangsdk/openstack/identity/v3/tokens
+github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images
+github.com/huaweicloud/golangsdk/openstack/imageservice/v2/members
 github.com/huaweicloud/golangsdk/openstack/networking/v1/eips
+github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/external
+github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips
+github.com/huaweicloud/golangsdk/openstack/networking/v2/networks
 github.com/huaweicloud/golangsdk/openstack/utils
 github.com/huaweicloud/golangsdk/pagination
 # github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869
@@ -443,8 +432,6 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/yaml.v2 v2.2.7
-gopkg.in/yaml.v2
 # honnef.co/go/tools v0.0.1-2019.2.3
 honnef.co/go/tools/arg
 honnef.co/go/tools/cmd/staticcheck

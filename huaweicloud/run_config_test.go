@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -140,7 +140,7 @@ func TestBuildImageFilter(t *testing.T) {
 		Name:       "Ubuntu 16.04",
 		Visibility: "public",
 		Owner:      "1234567890",
-		Tags:       []string{"prod", "ready"},
+		Tag:        "prod",
 		Properties: map[string]string{"os_distro": "ubuntu", "os_version": "16.04"},
 	}
 
@@ -200,7 +200,7 @@ func TestImageFiltersEmpty(t *testing.T) {
 		Name:       "Ubuntu 16.04",
 		Visibility: "public",
 		Owner:      "1234567890",
-		Tags:       []string{"prod", "ready"},
+		Tag:        "prod",
 		Properties: map[string]string{"os_distro": "ubuntu", "os_version": "16.04"},
 	}
 

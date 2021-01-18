@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/common/uuid"
 	"github.com/hashicorp/packer/helper/communicator"
 	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 // RunConfig contains configuration for running an instance from a source image
@@ -42,7 +42,7 @@ type RunConfig struct {
 	//             "name": "ubuntu-16.04",
 	//             "visibility": "protected",
 	//             "owner": "d1a588cf4b0743344508dc145649372d1",
-	//             "tags": ["prod", "ready"],
+	//             "tag": "prod",
 	//             "properties": {
 	//                 "os_distro": "ubuntu"
 	//             }
@@ -69,7 +69,7 @@ type RunConfig struct {
 	//
 	//     -   owner (string)
 	//
-	//     -   tags (array of strings)
+	//     -   tag (string)
 	//
 	//     -   visibility (string)
 	//
@@ -192,13 +192,13 @@ type ImageFilter struct {
 type ImageFilterOptions struct {
 	Name       string            `mapstructure:"name"`
 	Owner      string            `mapstructure:"owner"`
-	Tags       []string          `mapstructure:"tags"`
+	Tag        string            `mapstructure:"tag"`
 	Visibility string            `mapstructure:"visibility"`
 	Properties map[string]string `mapstructure:"properties"`
 }
 
 func (f *ImageFilterOptions) Empty() bool {
-	return f.Name == "" && f.Owner == "" && len(f.Tags) == 0 && f.Visibility == "" && len(f.Properties) == 0
+	return f.Name == "" && f.Owner == "" && f.Tag == "" && f.Visibility == "" && len(f.Properties) == 0
 }
 
 func (f *ImageFilterOptions) Build() (*images.ListOpts, error) {
@@ -216,8 +216,8 @@ func (f *ImageFilterOptions) Build() (*images.ListOpts, error) {
 	if f.Owner != "" {
 		opts.Owner = f.Owner
 	}
-	if len(f.Tags) > 0 {
-		opts.Tags = f.Tags
+	if f.Tag != "" {
+		opts.Tag = f.Tag
 	}
 	if f.Visibility != "" {
 		v, err := getImageVisibility(f.Visibility)

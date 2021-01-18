@@ -6,16 +6,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 )
 
 // CommHost looks up the host for the communicator.
 func CommHost(
 	host string,
-	client *gophercloud.ServiceClient,
+	client *golangsdk.ServiceClient,
 	sshinterface string,
 	sshipversion string) func(multistep.StateBag) (string, error) {
 	return func(state multistep.StateBag) (string, error) {
