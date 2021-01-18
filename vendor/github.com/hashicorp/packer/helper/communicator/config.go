@@ -11,7 +11,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/hcl/v2/hcldec"
 	packerssh "github.com/hashicorp/packer/communicator/ssh"
+	"github.com/hashicorp/packer/helper/config"
 	"github.com/hashicorp/packer/helper/multistep"
 	helperssh "github.com/hashicorp/packer/helper/ssh"
 	"github.com/hashicorp/packer/packer"
@@ -49,10 +51,10 @@ type Config struct {
 	//
 	// ```json
 	// {
-	//     "communicator": "ssh",
-	//     "ssh_username": "myuser",
-	//     "pause_before_connecting": "10m"
-	//   }
+	//   "communicator": "ssh",
+	//   "ssh_username": "myuser",
+	//   "pause_before_connecting": "10m"
+	// }
 	// ```
 	//
 	// In this example, Packer will check whether it can connect, as normal. But once
@@ -75,13 +77,12 @@ type SSH struct {
 	// A plaintext password to use to authenticate with SSH.
 	SSHPassword string `mapstructure:"ssh_password"`
 	// If specified, this is the key that will be used for SSH with the
-	// machine. The key must match a key pair name loaded up into Amazon EC2.
+	// machine. The key must match a key pair name loaded up into the remote.
 	// By default, this is blank, and Packer will generate a temporary keypair
-	// unless [`ssh_password`](../templates/communicator.html#ssh_password) is
-	// used.
-	// [`ssh_private_key_file`](../templates/communicator.html#ssh_private_key_file)
-	// or `ssh_agent_auth` must be specified when `ssh_keypair_name` is
-	// utilized.
+	// unless [`ssh_password`](#ssh_password) is used.
+	// [`ssh_private_key_file`](#ssh_private_key_file) or
+	// [`ssh_agent_auth`](#ssh_agent_auth) must be specified when
+	// [`ssh_keypair_name`](#ssh_keypair_name) is utilized.
 	SSHKeyPairName string `mapstructure:"ssh_keypair_name"`
 	// The name of the temporary key pair to generate. By default, Packer
 	// generates a name that looks like `packer_<UUID>`, where &lt;UUID&gt; is
@@ -107,11 +108,10 @@ type SSH struct {
 	SSHTimeout time.Duration `mapstructure:"ssh_timeout"`
 	// If true, the local SSH agent will be used to authenticate connections to
 	// the source instance. No temporary keypair will be created, and the
-	// values of `ssh_password` and `ssh_private_key_file` will be ignored. To
-	// use this option with a key pair already configured in the source AMI,
-	// leave the `ssh_keypair_name` blank. To associate an existing key pair in
-	// AWS with the source instance, set the `ssh_keypair_name` field to the
-	// name of the key pair.
+	// values of [`ssh_password`](#ssh_password) and
+	// [`ssh_private_key_file`](#ssh_private_key_file) will be ignored. The
+	// environment variable `SSH_AUTH_SOCK` must be set for this option to work
+	// properly.
 	SSHAgentAuth bool `mapstructure:"ssh_agent_auth"`
 	// If true, SSH agent forwarding will be disabled. Defaults to `false`.
 	SSHDisableAgentForwarding bool `mapstructure:"ssh_disable_agent_forwarding"`
@@ -129,6 +129,8 @@ type SSH struct {
 	SSHBastionUsername string `mapstructure:"ssh_bastion_username"`
 	// The password to use to authenticate with the bastion host.
 	SSHBastionPassword string `mapstructure:"ssh_bastion_password"`
+	// If `true`, the keyboard-interactive used to authenticate with bastion host.
+	SSHBastionInteractive bool `mapstructure:"ssh_bastion_interactive"`
 	// Path to a PEM encoded private key file to use to authenticate with the
 	// bastion host. The `~` can be used in path and will be expanded to the
 	// home directory of current user.
@@ -160,28 +162,8 @@ type SSH struct {
 	SSHLocalTunnels []string `mapstructure:"ssh_local_tunnels"`
 
 	// SSH Internals
-	SSHPublicKey  []byte
-	SSHPrivateKey []byte
-}
-
-type SSHInterface struct {
-	// One of `public_ip`, `private_ip`, `public_dns`, or `private_dns`. If
-	// set, either the public IP address, private IP address, public DNS name
-	// or private DNS name will used as the host for SSH. The default behaviour
-	// if inside a VPC is to use the public IP address if available, otherwise
-	// the private IP address will be used. If not in a VPC the public DNS name
-	// will be used. Also works for WinRM.
-	//
-	// Where Packer is configured for an outbound proxy but WinRM traffic
-	// should be direct, `ssh_interface` must be set to `private_dns` and
-	// `<region>.compute.internal` included in the `NO_PROXY` environment
-	// variable.
-	SSHInterface string `mapstructure:"ssh_interface"`
-	// The IP version to use for SSH connections, valid values are `4` and `6`.
-	// Useful on dual stacked instances where the default behavior is to
-	// connect via whichever IP address is returned first from the OpenStack
-	// API.
-	SSHIPVersion string `mapstructure:"ssh_ip_version"`
+	SSHPublicKey  []byte `mapstructure:"ssh_public_key"`
+	SSHPrivateKey []byte `mapstructure:"ssh_private_key"`
 }
 
 type WinRM struct {
@@ -213,6 +195,44 @@ type WinRM struct {
 	// [here](https://msdn.microsoft.com/en-us/library/aa384295(v=vs.85).aspx).
 	WinRMUseNTLM            bool `mapstructure:"winrm_use_ntlm"`
 	WinRMTransportDecorator func() winrm.Transporter
+}
+
+func (c *SSH) ConfigSpec() hcldec.ObjectSpec   { return c.FlatMapstructure().HCL2Spec() }
+func (c *WinRM) ConfigSpec() hcldec.ObjectSpec { return c.FlatMapstructure().HCL2Spec() }
+
+func (c *SSH) Configure(raws ...interface{}) ([]string, error) {
+	err := config.Decode(c, nil, raws...)
+	return nil, err
+}
+
+func (c *WinRM) Configure(raws ...interface{}) ([]string, error) {
+	err := config.Decode(c, nil, raws...)
+	return nil, err
+}
+
+var (
+	_ packer.ConfigurableCommunicator = new(SSH)
+	_ packer.ConfigurableCommunicator = new(WinRM)
+)
+
+type SSHInterface struct {
+	// One of `public_ip`, `private_ip`, `public_dns`, or `private_dns`. If
+	// set, either the public IP address, private IP address, public DNS name
+	// or private DNS name will used as the host for SSH. The default behaviour
+	// if inside a VPC is to use the public IP address if available, otherwise
+	// the private IP address will be used. If not in a VPC the public DNS name
+	// will be used. Also works for WinRM.
+	//
+	// Where Packer is configured for an outbound proxy but WinRM traffic
+	// should be direct, `ssh_interface` must be set to `private_dns` and
+	// `<region>.compute.internal` included in the `NO_PROXY` environment
+	// variable.
+	SSHInterface string `mapstructure:"ssh_interface"`
+	// The IP version to use for SSH connections, valid values are `4` and `6`.
+	// Useful on dual stacked instances where the default behavior is to
+	// connect via whichever IP address is returned first from the OpenStack
+	// API.
+	SSHIPVersion string `mapstructure:"ssh_ip_version"`
 }
 
 // ReadSSHPrivateKeyFile returns the SSH private key bytes
@@ -305,7 +325,7 @@ func (c *Config) Port() int {
 	}
 }
 
-// Host returns the port that will be used for access based on config.
+// Host returns the host that will be used for access based on config.
 func (c *Config) Host() string {
 	switch c.Type {
 	case "ssh":
@@ -317,7 +337,7 @@ func (c *Config) Host() string {
 	}
 }
 
-// User returns the port that will be used for access based on config.
+// User returns the user that will be used for access based on config.
 func (c *Config) User() string {
 	switch c.Type {
 	case "ssh":
@@ -329,7 +349,7 @@ func (c *Config) User() string {
 	}
 }
 
-// Password returns the port that will be used for access based on config.
+// Password returns the password that will be used for access based on config.
 func (c *Config) Password() string {
 	switch c.Type {
 	case "ssh":
