@@ -12,6 +12,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/packer/common/uuid"
+	"github.com/hashicorp/packer/helper/common"
 	"github.com/hashicorp/packer/version"
 	vaultapi "github.com/hashicorp/vault/api"
 	strftime "github.com/jehiah/go-strftime"
@@ -43,6 +44,7 @@ var FuncGens = map[string]interface{}{
 	"consul_key":     funcGenConsul,
 	"vault":          funcGenVault,
 	"sed":            funcGenSed,
+	"build":          funcGenBuild,
 
 	"replace":     replace,
 	"replace_all": replace_all,
@@ -159,6 +161,53 @@ func funcGenTemplateDir(ctx *Context) interface{} {
 		}
 
 		return path, nil
+	}
+}
+
+func passthroughOrInterpolate(data map[interface{}]interface{}, s string) (string, error) {
+	if heldPlace, ok := data[s]; ok {
+		if hp, ok := heldPlace.(string); ok {
+			// If we're in the first interpolation pass, the goal is to
+			// make sure that we pass the value through.
+			// TODO match against an actual string constant
+			if strings.Contains(hp, common.PlaceholderMsg) {
+				return fmt.Sprintf("{{.%s}}", s), nil
+			} else {
+				return hp, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("loaded data, but couldnt find %s in it.", s)
+
+}
+func funcGenBuild(ctx *Context) interface{} {
+	// Depending on where the context data is coming from, it could take a few
+	// different map types. The following switch standardizes the map types
+	// so we can act on them correctly.
+	return func(s string) (string, error) {
+		switch data := ctx.Data.(type) {
+		case map[interface{}]interface{}:
+			return passthroughOrInterpolate(data, s)
+		case map[string]interface{}:
+			// convert to a map[interface{}]interface{} so we can use same
+			// parsing on it
+			passed := make(map[interface{}]interface{}, len(data))
+			for k, v := range data {
+				passed[k] = v
+			}
+			return passthroughOrInterpolate(passed, s)
+		case map[string]string:
+			// convert to a map[interface{}]interface{} so we can use same
+			// parsing on it
+			passed := make(map[interface{}]interface{}, len(data))
+			for k, v := range data {
+				passed[k] = v
+			}
+			return passthroughOrInterpolate(passed, s)
+		default:
+			return "", fmt.Errorf("Error validating build variable: the given "+
+				"variable %s will not be passed into your plugin.", s)
+		}
 	}
 }
 
