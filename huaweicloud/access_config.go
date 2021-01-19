@@ -167,13 +167,6 @@ func (c *AccessConfig) networkV2Client() (*golangsdk.ServiceClient, error) {
 }
 
 func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
-	return huaweisdk.NewSDKClient(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	}, "vpc")
-}
-
-func (c *AccessConfig) networkV1Client() (*golangsdk.ServiceClient, error) {
 	return huaweisdk.NewNetworkV1(c.hwClient, golangsdk.EndpointOpts{
 		Region:       c.Region,
 		Availability: c.getEndpointType(),

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
 	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/huaweicloud/golangsdk/openstack/networking/v1/eips"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 )
 
 type StepAllocateIp struct {
@@ -192,7 +192,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	ui.Say(fmt.Sprintf("Creating EIP ..."))
 
 	result := floatingips.FloatingIP{}
-	client, err := config.networkV1Client()
+	client, err := config.vpcClient()
 	if err != nil {
 		err = fmt.Errorf("Error initializing vpc client: %s", err)
 		ui.Error(err.Error())
