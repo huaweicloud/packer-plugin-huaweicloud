@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/blockstorage/v3/volumes"
 )
 
 type StepCreateVolume struct {
@@ -125,7 +125,7 @@ func (s *StepCreateVolume) Cleanup(state multistep.StateBag) {
 		}
 	}
 	ui.Say(fmt.Sprintf("Deleting volume: %s ...", s.volumeID))
-	err = volumes.Delete(blockStorageClient, s.volumeID, volumes.DeleteOpts{}).ExtractErr()
+	err = volumes.Delete(blockStorageClient, s.volumeID).ExtractErr()
 	if err != nil {
 		ui.Error(fmt.Sprintf(
 			"Error cleaning up volume. Please delete the volume manually: %s", s.volumeID))

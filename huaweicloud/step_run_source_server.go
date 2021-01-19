@@ -6,12 +6,12 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/bootfromvolume"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/bootfromvolume"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
 type StepRunSourceServer struct {
@@ -174,7 +174,7 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	WaitForState(&stateChange)
 }
 
-func createServer(ui packer.Ui, state multistep.StateBag, client *gophercloud.ServiceClient, opts servers.CreateOptsBuilder) (*servers.Server, error) {
+func createServer(ui packer.Ui, state multistep.StateBag, client *golangsdk.ServiceClient, opts servers.CreateOptsBuilder) (*servers.Server, error) {
 	server, err := servers.Create(client, opts).Extract()
 	if err != nil {
 		err = fmt.Errorf("Error launching source server: %s", err)

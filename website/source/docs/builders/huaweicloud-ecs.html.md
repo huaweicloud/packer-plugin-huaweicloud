@@ -34,23 +34,13 @@ builder.
 
 ### Required:
 
+-  `access_key` (string) - The access key of the HuaweiCloud to use. If omitted, the *HW_ACCESS_KEY* environment variable is used.
+
+-  `secret_key` (string) - The secret key of the HuaweiCloud to use. If omitted, the *HW_SECRET_KEY* environment variable is used.
+
+-   `region` (string) - The region name to build resources in Huawei Cloud. If omitted, the *HW_REGION_NAME* environment variable is used.
+
 -   `image_name` (string) - The name of the generated image.
-
--   `identity_endpoint` (string) - The URL of the Huawei Cloud Identity service.
-
--   `username` (string) - The username used to connect to the Huawei Cloud.
-
--   `password` (string) - The password used to connect to the Huawei Cloud.
-    
--   `tenant_name` (string) - The project name to build resources in Huawei Cloud.
-
--   `availability_zone` (string) - The availability zone to build resources in Huawei Cloud.
-
--   `domain_name` (string) - The Domain name to build resources in Huawei Cloud.
-
--   `insecure` (bool) - Whether or not the connection to Huawei Cloud can be done over an insecure connection. By default this is false.
-
--   `region` (string) - The region name to build resources in Huawei Cloud.
 
 -   `source_image` (string) - The ID to the base image to use. This is the image that will be used to launch a new server and provision it. Unless you specify completely custom SSH settings, the source image must have cloud-init installed so that the keypair gets assigned properly.
 
@@ -64,11 +54,24 @@ builder.
     
 ### Optional:
 
+-   `availability_zone` (string) - The availability zone to build resources in Huawei Cloud.
+
 -   `eip_type` (string) - The type of eip. See the api doc to get the value..
 
 -   `eip_bandwidth_size` (int) - The size of eip bandwidth.
 
 -   `volume_size` (int) - The size of the system volume in GB. If this isn't specified, it is calculated from the source image bytes size.
+
+-   `project_name` (string) - The project name to build resources in Huawei Cloud.
+    If omitted, the *HW_PROJECT_NAME* environment variable or `region` is used.
+
+-   `project_id` (string) - The project ID to build resources in Huawei Cloud.
+    If omitted, the *HW_PROJECT_ID* environment variable is used.
+
+-   `auth_url` (string) - The URL of the Huawei Cloud Identity service. If omitted, the *HW_AUTH_URL* environment variable is used.
+    This is not required if you use Huawei Cloud.
+
+-   `insecure` (bool) - Whether or not the connection to Huawei Cloud can be done over an insecure connection. By default this is false.
 
 ## Communicator Configuration
 
@@ -87,25 +90,21 @@ Here is a basic builder example.
     "builders": [
         {
             "type": "huaweicloud-ecs",
-            "image_name": "{{ image_name }}",
-            "identity_endpoint": "https://iam.myhwclouds.com:443/v3",
-            "username": "{{ username }}",
-            "password": "{{ password }}",
-            "tenant_name": "cn-north-1",
-            "domain_name": "{{ domain_name }}",
-            "insecure": "true",
+            "access_key": "{{ my-access-key }}",
+            "secret_key": "{{ my-secret-key }}",
             "region": "cn-north-1",
+            "image_name": "{{ image_name }}",
             "source_image": "{{ source_image }}",
-            "flavor": "s3.medium.2",
-	    "vpc_id": "{{ vpc_id }}",
+            "flavor": "s6.large.2",
+            "vpc_id": "{{ vpc_id }}",
             "subnets": [
                 "{{ subnet }}"
             ],
             "security_groups": [
               "{{ security_group }}"
             ],
-	    "eip_type": "5_bgp",
-	    "eip_bandwidth_size": 2,
+            "eip_type": "5_bgp",
+            "eip_bandwidth_size": 2,
             "ssh_username": "root",
             "ssh_ip_version": "4",
         }
@@ -115,15 +114,15 @@ Here is a basic builder example.
         {
             "type": "shell",
             "inline": [
-  	        "echo \"start install nginx, sleep 20s first\"",
-       	        "sleep 20",
-		"echo \"run install\"",
-	    	"yum -y install nginx",
-		"echo \"enable nginx\"",
-		"systemctl enable nginx.service",
-		"echo \"install nginx done\""
-	    ]
-	}
+                "echo \"start install nginx, sleep 20s first\"",
+                "sleep 20",
+                "echo \"run install\"",
+                "yum -y install nginx",
+                "echo \"enable nginx\"",
+                "systemctl enable nginx.service",
+                "echo \"install nginx done\""
+            ]
+        }
     ]
 }
 ```

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	imageservice "github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/template/interpolate"
 )
 

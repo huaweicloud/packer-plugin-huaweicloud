@@ -4,20 +4,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/blockstorage/v3/volumes"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 // WaitForVolume waits for the given volume to become available.
-func WaitForVolume(blockStorageClient *gophercloud.ServiceClient, volumeID string) error {
+func WaitForVolume(blockStorageClient *golangsdk.ServiceClient, volumeID string) error {
 	maxNumErrors := 10
 	numErrors := 0
 
 	for {
 		status, err := GetVolumeStatus(blockStorageClient, volumeID)
 		if err != nil {
-			errCode, ok := err.(*gophercloud.ErrUnexpectedResponseCode)
+			errCode, ok := err.(*golangsdk.ErrUnexpectedResponseCode)
 			if ok && (errCode.Actual == 500 || errCode.Actual == 404) {
 				numErrors++
 				if numErrors >= maxNumErrors {
@@ -44,7 +44,7 @@ func WaitForVolume(blockStorageClient *gophercloud.ServiceClient, volumeID strin
 // GetVolumeSize returns volume size in gigabytes based on the image min disk
 // value if it's not empty.
 // Or it calculates needed gigabytes size from the image bytes size.
-func GetVolumeSize(imageClient *gophercloud.ServiceClient, imageID string) (int, error) {
+func GetVolumeSize(imageClient *golangsdk.ServiceClient, imageID string) (int, error) {
 	sourceImage, err := images.Get(imageClient, imageID).Extract()
 	if err != nil {
 		return 0, err
@@ -66,7 +66,7 @@ func GetVolumeSize(imageClient *gophercloud.ServiceClient, imageID string) (int,
 	return volumeSizeGB, nil
 }
 
-func GetVolumeStatus(blockStorageClient *gophercloud.ServiceClient, volumeID string) (string, error) {
+func GetVolumeStatus(blockStorageClient *golangsdk.ServiceClient, volumeID string) (string, error) {
 	volume, err := volumes.Get(blockStorageClient, volumeID).Extract()
 	if err != nil {
 		return "", err

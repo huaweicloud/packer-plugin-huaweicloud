@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
 // StateRefreshFunc is a function type used for StateChangeConf that is
@@ -34,11 +34,11 @@ type StateChangeConf struct {
 // ServerStateRefreshFunc returns a StateRefreshFunc that is used to watch
 // an openstack server.
 func ServerStateRefreshFunc(
-	client *gophercloud.ServiceClient, s *servers.Server) StateRefreshFunc {
+	client *golangsdk.ServiceClient, s *servers.Server) StateRefreshFunc {
 	return func() (interface{}, string, int, error) {
 		serverNew, err := servers.Get(client, s.ID).Extract()
 		if err != nil {
-			if _, ok := err.(gophercloud.ErrDefault404); ok {
+			if _, ok := err.(golangsdk.ErrDefault404); ok {
 				log.Printf("[INFO] 404 on ServerStateRefresh, returning DELETED")
 				return nil, "DELETED", 0, nil
 			}

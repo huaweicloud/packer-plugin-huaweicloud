@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk"
 )
 
 type StepLoadAZ struct {
@@ -39,10 +39,10 @@ func (s *StepLoadAZ) Run(ctx context.Context, state multistep.StateBag) multiste
 func (s *StepLoadAZ) Cleanup(state multistep.StateBag) {
 }
 
-func listZones(client *gophercloud.ServiceClient) ([]string, error) {
+func listZones(client *golangsdk.ServiceClient) ([]string, error) {
 	url := client.ServiceURL("os-availability-zone")
-	r := gophercloud.Result{}
-	_, r.Err = client.Get(url, &r.Body, &gophercloud.RequestOpts{
+	r := golangsdk.Result{}
+	_, r.Err = client.Get(url, &r.Body, &golangsdk.RequestOpts{
 		MoreHeaders: map[string]string{"Content-Type": "application/json"}})
 	if r.Err != nil {
 		return nil, fmt.Errorf("Error getting zones, err=%s", r.Err)

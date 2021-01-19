@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 type stepUpdateImageMinDisk struct{}
@@ -32,8 +32,10 @@ func (s *stepUpdateImageMinDisk) Run(_ context.Context, state multistep.StateBag
 		imageClient,
 		imageId,
 		images.UpdateOpts{
-			images.ReplaceImageMinDisk{
-				NewMinDisk: config.ImageMinDisk,
+			images.UpdateImageProperty{
+				Op:    "replace",
+				Name:  "/min_disk",
+				Value: string(config.ImageMinDisk),
 			},
 		},
 	)

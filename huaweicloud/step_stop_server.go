@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/startstop"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
 type StepStopServer struct{}
@@ -29,15 +29,17 @@ func (s *StepStopServer) Run(ctx context.Context, state multistep.StateBag) mult
 
 	ui.Say(fmt.Sprintf("Stopping server: %s ...", server.ID))
 	if err := startstop.Stop(client, server.ID).ExtractErr(); err != nil {
-		if _, ok := err.(gophercloud.ErrDefault409); ok {
-			// The server might have already been shut down by Windows Sysprep
-			log.Printf("[WARN] 409 on stopping an already stopped server, continuing")
-			return multistep.ActionContinue
-		} else {
-			err = fmt.Errorf("Error stopping server: %s", err)
-			state.Put("error", err)
-			return multistep.ActionHalt
+		if errCode, ok := err.(golangsdk.ErrUnexpectedResponseCode); ok {
+			if errCode.Actual == 409 {
+				// The server might have already been shut down by Windows Sysprep
+				log.Printf("[WARN] 409 on stopping an already stopped server, continuing")
+				return multistep.ActionContinue
+			}
 		}
+
+		err = fmt.Errorf("Error stopping server: %s", err)
+		state.Put("error", err)
+		return multistep.ActionHalt
 	}
 
 	ui.Message(fmt.Sprintf("Waiting for server to stop: %s ...", server.ID))
