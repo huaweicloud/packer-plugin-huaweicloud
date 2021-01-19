@@ -165,13 +165,13 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 		}
 	}
 
-	stateChange := StateChangeConf{
+	stateChange := ServerStateChangeConf{
 		Pending: []string{"ACTIVE", "BUILD", "REBUILD", "SUSPENDED", "SHUTOFF", "STOPPED"},
-		Refresh: ServerStateRefreshFunc(computeClient, s.server),
+		Refresh: ServerStateRefreshFunc(computeClient, s.server.ID),
 		Target:  []string{"DELETED"},
 	}
 
-	WaitForState(&stateChange)
+	stateChange.WaitForState()
 }
 
 func createServer(ui packer.Ui, state multistep.StateBag, client *golangsdk.ServiceClient, opts servers.CreateOptsBuilder) (*servers.Server, error) {
@@ -186,13 +186,13 @@ func createServer(ui packer.Ui, state multistep.StateBag, client *golangsdk.Serv
 	log.Printf("server id: %s", server.ID)
 
 	ui.Say("Waiting for server to become ready...")
-	stateChange := StateChangeConf{
+	stateChange := ServerStateChangeConf{
 		Pending:   []string{"BUILD"},
 		Target:    []string{"ACTIVE"},
-		Refresh:   ServerStateRefreshFunc(client, server),
+		Refresh:   ServerStateRefreshFunc(client, server.ID),
 		StepState: state,
 	}
-	latestServer, err := WaitForState(&stateChange)
+	latestServer, err := stateChange.WaitForState()
 	if err != nil {
 		err = fmt.Errorf("Error waiting for server (%s) to become ready: %s", server.ID, err)
 		ui.Error(err.Error())

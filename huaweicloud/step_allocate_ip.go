@@ -218,7 +218,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	}
 	ui.Message(fmt.Sprintf("Created EIP: '%s' (%s)", eip.ID, eip.PublicAddress))
 
-	stateConf := &StateChangeConf1{
+	stateConf := &StateChangeConf{
 		Target:     []string{"ACTIVE"},
 		Refresh:    getEIPStatus(client, eip.ID),
 		Timeout:    10 * time.Minute,
@@ -238,7 +238,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	return result, nil
 }
 
-func getEIPStatus(client *golangsdk.ServiceClient, eipID string) StateRefreshFunc1 {
+func getEIPStatus(client *golangsdk.ServiceClient, eipID string) StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		e, err := eips.Get(client, eipID).Extract()
 		if err != nil {

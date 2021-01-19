@@ -12,28 +12,27 @@ import (
 
 var refreshGracePeriod = 30 * time.Second
 
-// StateRefreshFunc is a function type used for StateChangeConf that is
+// StateRefreshFunc is a function type used for xxxStateChangeConf that is
 // responsible for refreshing the item being watched for a state change.
+// It returns three results:
 //
-// It returns three results. `result` is any object that will be returned
-// as the final object after waiting for state change. This allows you to
-// return the final updated object, for example an EC2 instance after refreshing
-// it.
-//
-// `state` is the latest state of that object. And `err` is any error that
-// may have happened while refreshing the state.
-type StateRefreshFunc1 func() (result interface{}, state string, err error)
+// `result` is any object that will be returned as the final object after
+// waiting for state change. This allows you to return the final updated object,
+// for example an openstack instance after refreshing it.
+// `state` is the latest state of that object.
+// `err` is any error that may have happened while refreshing the state.
+type StateRefreshFunc func() (result interface{}, state string, err error)
 
 // StateChangeConf is the configuration struct used for `WaitForState`.
-type StateChangeConf1 struct {
-	Delay          time.Duration     // Wait this time before starting checks
-	Pending        []string          // States that are "allowed" and will continue trying
-	Refresh        StateRefreshFunc1 // Refreshes the current state
-	Target         []string          // Target state
-	Timeout        time.Duration     // The amount of time to wait before timeout
-	MinTimeout     time.Duration     // Smallest time to wait before refreshes
-	PollInterval   time.Duration     // Override MinTimeout/backoff and only poll this often
-	NotFoundChecks int               // Number of times to allow not found
+type StateChangeConf struct {
+	Delay          time.Duration    // Wait this time before starting checks
+	Pending        []string         // States that are "allowed" and will continue trying
+	Refresh        StateRefreshFunc // Refreshes the current state
+	Target         []string         // Target state
+	Timeout        time.Duration    // The amount of time to wait before timeout
+	MinTimeout     time.Duration    // Smallest time to wait before refreshes
+	PollInterval   time.Duration    // Override MinTimeout/backoff and only poll this often
+	NotFoundChecks int              // Number of times to allow not found
 	StateBag       multistep.StateBag
 
 	// This is to work around inconsistent APIs
@@ -54,7 +53,7 @@ type StateChangeConf1 struct {
 //
 // Otherwise, the result is the result of the first call to the Refresh function to
 // reach the target state.
-func (conf *StateChangeConf1) WaitForState() (interface{}, error) {
+func (conf *StateChangeConf) WaitForState() (interface{}, error) {
 	log.Printf("[DEBUG] Waiting for state to become: %s", conf.Target)
 
 	notfoundTick := 0
