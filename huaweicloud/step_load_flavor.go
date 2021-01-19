@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/flavors"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/flavors"
 )
 
 // StepLoadFlavor gets the FlavorRef from a Flavor. It first assumes

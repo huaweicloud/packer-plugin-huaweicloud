@@ -9,11 +9,11 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"github.com/hashicorp/packer/helper/communicator"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
 	"github.com/hashicorp/packer/packer/tmp"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"golang.org/x/crypto/ssh"
 )
 

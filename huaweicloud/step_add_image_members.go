@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/members"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/members"
 )
 
 type stepAddImageMembers struct{}

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/template/interpolate"
+	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 // ImageConfig is for common configuration related to creating Images.
@@ -34,7 +34,7 @@ type ImageConfig struct {
 func (c *ImageConfig) Prepare(ctx *interpolate.Context) []error {
 	errs := make([]error, 0)
 	if c.ImageName == "" {
-		errs = append(errs, fmt.Errorf("An image_name must be specified"))
+		errs = append(errs, fmt.Errorf("image_name must be specified"))
 	}
 
 	// By default, OpenStack seems to create the image with an image_type of

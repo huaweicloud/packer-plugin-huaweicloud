@@ -17,7 +17,7 @@ import (
 )
 
 // The unique ID for this builder
-const BuilderId = "mitchellh.openstack"
+const BuilderId = "huawei.huaweicloud"
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
@@ -66,7 +66,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 		b.config.InstanceName = b.config.ImageName
 	}
 
-	//packer.LogSecretFilter.Set(b.config.Password)
+	packer.LogSecretFilter.Set(b.config.AccessKey, b.config.SecretKey)
 	return nil, nil, nil
 }
 
@@ -96,7 +96,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepKeyPair{
 			Debug:        b.config.PackerDebug,
 			Comm:         &b.config.Comm,
-			DebugKeyPath: fmt.Sprintf("os_%s.pem", b.config.PackerBuildName),
+			DebugKeyPath: fmt.Sprintf("ecs_%s.pem", b.config.PackerBuildName),
 		},
 		&StepSourceImageInfo{
 			SourceImage:      b.config.RunConfig.SourceImage,

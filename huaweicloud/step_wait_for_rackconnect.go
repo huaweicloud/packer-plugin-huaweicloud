@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
 type StepWaitForRackConnect struct {

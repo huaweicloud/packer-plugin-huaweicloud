@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/huaweicloud/golangsdk/openstack/blockstorage/extensions/volumeactions"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/blockstorage/extensions/volumeactions"
 )
 
 type StepDetachVolume struct {

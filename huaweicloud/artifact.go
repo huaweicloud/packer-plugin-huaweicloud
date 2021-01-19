@@ -13,10 +13,10 @@ type Artifact struct {
 	// ImageId of built image
 	ImageId string
 
-	// BuilderId is the unique ID for the builder that created this image
+	// BuilderIdValue is the unique ID for the builder that created this image
 	BuilderIdValue string
 
-	// OpenStack connection for performing API stuff.
+	// IMS client for performing API stuff.
 	Client *golangsdk.ServiceClient
 }
 
