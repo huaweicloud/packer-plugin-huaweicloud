@@ -91,9 +91,6 @@ type RunConfig struct {
 	// the default enforced by your OpenStack cluster will be used. This may be
 	// required for some OpenStack clusters.
 	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
-	// For rackspace, whether or not to wait for Rackconnect to assign the
-	// machine an IP address before connecting via SSH. Defaults to false.
-	RackconnectWait bool `mapstructure:"rackconnect_wait" required:"false"`
 	// The ID or name of an external network that can be used for creation of a
 	// new floating IP.
 	FloatingIPNetwork string `mapstructure:"floating_ip_network" required:"false"`
@@ -170,11 +167,6 @@ type RunConfig struct {
 	// instance and Block Storage volume availability zones aren't specified,
 	// the default enforced by your OpenStack cluster will be used.
 	VolumeAvailabilityZone string `mapstructure:"volume_availability_zone" required:"false"`
-
-	// Not really used, but here for BC
-	OpenstackProvider string `mapstructure:"openstack_provider"`
-	// *Deprecated* use `floating_ip` or `floating_ip_pool` instead.
-	UseFloatingIp bool `mapstructure:"use_floating_ip" required:"false"`
 
 	sourceImageOpts images.ListOpts
 }

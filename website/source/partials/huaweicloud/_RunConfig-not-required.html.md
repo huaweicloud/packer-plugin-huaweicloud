@@ -13,9 +13,6 @@
     the default enforced by your OpenStack cluster will be used. This may be
     required for some OpenStack clusters.
     
--   `rackconnect_wait` (bool) - For rackspace, whether or not to wait for Rackconnect to assign the
-    machine an IP address before connecting via SSH. Defaults to false.
-    
 -   `floating_ip_network` (string) - The ID or name of an external network that can be used for creation of a
     new floating IP.
     
@@ -91,8 +88,4 @@
     Compute instance availability zone will be used. If both of Compute
     instance and Block Storage volume availability zones aren't specified,
     the default enforced by your OpenStack cluster will be used.
-    
--   `openstack_provider` (string) - Not really used, but here for BC
-    
--   `use_floating_ip` (bool) - *Deprecated* use `floating_ip` or `floating_ip_pool` instead.
     
