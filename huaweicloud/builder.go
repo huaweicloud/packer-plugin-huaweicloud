@@ -130,9 +130,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Debug: b.config.PackerDebug,
 			Comm:  &b.config.RunConfig.Comm,
 		},
-		&StepWaitForRackConnect{
-			Wait: b.config.RackconnectWait,
-		},
 		&StepAllocateIp{
 			FloatingIPNetwork:     b.config.FloatingIPNetwork,
 			FloatingIP:            b.config.FloatingIP,

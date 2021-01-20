@@ -90,7 +90,6 @@ type FlatConfig struct {
 	SourceImageFilters          *FlatImageFilter        `mapstructure:"source_image_filter" required:"true" cty:"source_image_filter"`
 	Flavor                      *string                 `mapstructure:"flavor" required:"true" cty:"flavor"`
 	AvailabilityZone            *string                 `mapstructure:"availability_zone" required:"false" cty:"availability_zone"`
-	RackconnectWait             *bool                   `mapstructure:"rackconnect_wait" required:"false" cty:"rackconnect_wait"`
 	FloatingIPNetwork           *string                 `mapstructure:"floating_ip_network" required:"false" cty:"floating_ip_network"`
 	InstanceFloatingIPNet       *string                 `mapstructure:"instance_floating_ip_net" required:"false" cty:"instance_floating_ip_net"`
 	FloatingIP                  *string                 `mapstructure:"floating_ip" required:"false" cty:"floating_ip"`

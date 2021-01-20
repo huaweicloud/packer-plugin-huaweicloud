@@ -91,9 +91,6 @@ type RunConfig struct {
 	// the default enforced by your OpenStack cluster will be used. This may be
 	// required for some OpenStack clusters.
 	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
-	// For rackspace, whether or not to wait for Rackconnect to assign the
-	// machine an IP address before connecting via SSH. Defaults to false.
-	RackconnectWait bool `mapstructure:"rackconnect_wait" required:"false"`
 	// The ID or name of an external network that can be used for creation of a
 	// new floating IP.
 	FloatingIPNetwork string `mapstructure:"floating_ip_network" required:"false"`
