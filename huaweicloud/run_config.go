@@ -168,11 +168,6 @@ type RunConfig struct {
 	// the default enforced by your OpenStack cluster will be used.
 	VolumeAvailabilityZone string `mapstructure:"volume_availability_zone" required:"false"`
 
-	// Not really used, but here for BC
-	OpenstackProvider string `mapstructure:"openstack_provider"`
-	// *Deprecated* use `floating_ip` or `floating_ip_pool` instead.
-	UseFloatingIp bool `mapstructure:"use_floating_ip" required:"false"`
-
 	sourceImageOpts images.ListOpts
 }
 

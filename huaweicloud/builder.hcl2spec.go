@@ -113,8 +113,6 @@ type FlatConfig struct {
 	VolumeType                  *string                 `mapstructure:"volume_type" required:"false" cty:"volume_type"`
 	VolumeSize                  *int                    `mapstructure:"volume_size" required:"false" cty:"volume_size"`
 	VolumeAvailabilityZone      *string                 `mapstructure:"volume_availability_zone" required:"false" cty:"volume_availability_zone"`
-	OpenstackProvider           *string                 `mapstructure:"openstack_provider" cty:"openstack_provider"`
-	UseFloatingIp               *bool                   `mapstructure:"use_floating_ip" required:"false" cty:"use_floating_ip"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -233,8 +231,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"volume_type":                   &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                   &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
 		"volume_availability_zone":      &hcldec.AttrSpec{Name: "volume_availability_zone", Type: cty.String, Required: false},
-		"openstack_provider":            &hcldec.AttrSpec{Name: "openstack_provider", Type: cty.String, Required: false},
-		"use_floating_ip":               &hcldec.AttrSpec{Name: "use_floating_ip", Type: cty.Bool, Required: false},
 	}
 	return s
 }

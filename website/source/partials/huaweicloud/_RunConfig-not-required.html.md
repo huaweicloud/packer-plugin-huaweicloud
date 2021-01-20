@@ -89,7 +89,3 @@
     instance and Block Storage volume availability zones aren't specified,
     the default enforced by your OpenStack cluster will be used.
     
--   `openstack_provider` (string) - Not really used, but here for BC
-    
--   `use_floating_ip` (bool) - *Deprecated* use `floating_ip` or `floating_ip_pool` instead.
-    
