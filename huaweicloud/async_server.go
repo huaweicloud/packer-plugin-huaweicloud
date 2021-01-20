@@ -11,20 +11,8 @@ import (
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
-// StateRefreshFunc is a function type used for StateChangeConf that is
-// responsible for refreshing the item being watched for a state change.
-//
-// It returns three results. `result` is any object that will be returned
-// as the final object after waiting for state change. This allows you to
-// return the final updated object, for example an openstack instance after
-// refreshing it.
-//
-// `state` is the latest state of that object. And `err` is any error that
-// may have happened while refreshing the state.
-type StateRefreshFunc func() (result interface{}, state string, progress int, err error)
-
-// StateChangeConf is the configuration struct used for `WaitForState`.
-type StateChangeConf struct {
+// ServerStateChangeConf is the configuration struct used for `WaitForState`.
+type ServerStateChangeConf struct {
 	Pending   []string
 	Refresh   StateRefreshFunc
 	StepState multistep.StateBag
@@ -34,31 +22,30 @@ type StateChangeConf struct {
 // ServerStateRefreshFunc returns a StateRefreshFunc that is used to watch
 // an openstack server.
 func ServerStateRefreshFunc(
-	client *golangsdk.ServiceClient, s *servers.Server) StateRefreshFunc {
-	return func() (interface{}, string, int, error) {
-		serverNew, err := servers.Get(client, s.ID).Extract()
+	client *golangsdk.ServiceClient, serverID string) StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		serverNew, err := servers.Get(client, serverID).Extract()
 		if err != nil {
 			if _, ok := err.(golangsdk.ErrDefault404); ok {
 				log.Printf("[INFO] 404 on ServerStateRefresh, returning DELETED")
-				return nil, "DELETED", 0, nil
+				return nil, "DELETED", nil
 			}
 			log.Printf("[ERROR] Error on ServerStateRefresh: %s", err)
-			return nil, "", 0, err
+			return nil, "", err
 		}
 
-		return serverNew, serverNew.Status, serverNew.Progress, nil
+		return serverNew, serverNew.Status, nil
 	}
 }
 
 // WaitForState watches an object and waits for it to achieve a certain
 // state.
-func WaitForState(conf *StateChangeConf) (i interface{}, err error) {
+func (conf *ServerStateChangeConf) WaitForState() (i interface{}, err error) {
 	log.Printf("Waiting for state to become: %s", conf.Target)
 
 	for {
-		var currentProgress int
 		var currentState string
-		i, currentState, currentProgress, err = conf.Refresh()
+		i, currentState, err = conf.Refresh()
 		if err != nil {
 			return
 		}
@@ -87,7 +74,7 @@ func WaitForState(conf *StateChangeConf) (i interface{}, err error) {
 			return nil, fmt.Errorf("unexpected state '%s', wanted target '%s'", currentState, conf.Target)
 		}
 
-		log.Printf("Waiting for state to become: %s currently %s (%d%%)", conf.Target, currentState, currentProgress)
+		log.Printf("Waiting for state to become: %s, currently: %s", conf.Target, currentState)
 		time.Sleep(2 * time.Second)
 	}
 }

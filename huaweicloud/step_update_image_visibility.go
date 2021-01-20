@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 type stepUpdateImageVisibility struct{}

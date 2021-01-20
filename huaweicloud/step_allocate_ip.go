@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
 	"github.com/huaweicloud/golangsdk"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/huaweicloud/golangsdk/openstack/networking/v1/eips"
+	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 )
 
 type StepAllocateIp struct {
@@ -192,7 +192,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	ui.Say(fmt.Sprintf("Creating EIP ..."))
 
 	result := floatingips.FloatingIP{}
-	client, err := config.networkV1Client()
+	client, err := config.vpcClient()
 	if err != nil {
 		err = fmt.Errorf("Error initializing vpc client: %s", err)
 		ui.Error(err.Error())
@@ -218,7 +218,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	}
 	ui.Message(fmt.Sprintf("Created EIP: '%s' (%s)", eip.ID, eip.PublicAddress))
 
-	stateConf := &StateChangeConf1{
+	stateConf := &StateChangeConf{
 		Target:     []string{"ACTIVE"},
 		Refresh:    getEIPStatus(client, eip.ID),
 		Timeout:    10 * time.Minute,
@@ -238,7 +238,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 	return result, nil
 }
 
-func getEIPStatus(client *golangsdk.ServiceClient, eipID string) StateRefreshFunc1 {
+func getEIPStatus(client *golangsdk.ServiceClient, eipID string) StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		e, err := eips.Get(client, eipID).Extract()
 		if err != nil {

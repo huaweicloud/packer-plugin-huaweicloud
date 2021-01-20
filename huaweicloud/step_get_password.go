@@ -7,11 +7,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	commonhelper "github.com/hashicorp/packer/helper/common"
 	"github.com/hashicorp/packer/helper/communicator"
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"golang.org/x/crypto/ssh"
 )
 

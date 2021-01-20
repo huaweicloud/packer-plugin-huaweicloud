@@ -2,8 +2,8 @@
 package huaweicloud
 
 import (
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/zclconf/go-cty/cty"
 )
 
