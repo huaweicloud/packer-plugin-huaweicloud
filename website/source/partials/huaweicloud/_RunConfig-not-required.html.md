@@ -9,9 +9,8 @@
     connect via whichever IP address is returned first from the OpenStack
     API.
     
--   `availability_zone` (string) - The availability zone to launch the server in. If this isn't specified,
-    the default enforced by your OpenStack cluster will be used. This may be
-    required for some OpenStack clusters.
+-   `availability_zone` (string) - The availability zone to launch the server in.
+    If omitted, a random availability zone in the region will be used.
     
 -   `floating_ip_network` (string) - The ID or name of an external network that can be used for creation of a
     new floating IP.
@@ -83,9 +82,4 @@
     it is set to source image min disk value (if set) or calculated from the
     source image bytes size. Note that in some cases this needs to be
     specified, if use_blockstorage_volume is true.
-    
--   `volume_availability_zone` (string) - Availability zone of the Block Storage service volume. If omitted,
-    Compute instance availability zone will be used. If both of Compute
-    instance and Block Storage volume availability zones aren't specified,
-    the default enforced by your OpenStack cluster will be used.
     
