@@ -61,13 +61,14 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		}
 	}
 
+	availabilityZone := state.Get("availability_zone").(string)
 	serverOpts := servers.CreateOpts{
 		Name:             s.Name,
 		ImageRef:         sourceImage,
 		FlavorRef:        flavor,
 		SecurityGroups:   s.SecurityGroups,
 		Networks:         networks,
-		AvailabilityZone: s.AvailabilityZone,
+		AvailabilityZone: availabilityZone,
 		UserData:         userData,
 		ConfigDrive:      &s.ConfigDrive,
 		ServiceClient:    computeClient,
@@ -107,25 +108,8 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		}
 	}
 
-	azs := state.Get("azs").([]string)
-	if s.AvailabilityZone != "" {
-		for i, az := range azs {
-			if az == s.AvailabilityZone {
-				az = azs[0]
-				azs[0] = s.AvailabilityZone
-				azs[i] = az
-			}
-		}
-	}
-	var server *servers.Server
-	for _, az := range azs {
-		ui.Say(fmt.Sprintf("Launching server in az:%s ...", az))
-		serverOpts.AvailabilityZone = az
-		server, err = createServer(ui, state, computeClient, serverOptsExt)
-		if err == nil {
-			break
-		}
-	}
+	ui.Say(fmt.Sprintf("Launching server in az:%s ...", serverOpts.AvailabilityZone))
+	server, err := createServer(ui, state, computeClient, serverOptsExt)
 	if err != nil {
 		state.Put("error", err)
 		return multistep.ActionHalt

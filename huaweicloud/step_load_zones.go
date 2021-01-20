@@ -3,6 +3,7 @@ package huaweicloud
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/hashicorp/packer/helper/multistep"
@@ -11,6 +12,7 @@ import (
 )
 
 type StepLoadAZ struct {
+	AvailabilityZone string
 }
 
 func (s *StepLoadAZ) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -24,15 +26,36 @@ func (s *StepLoadAZ) Run(ctx context.Context, state multistep.StateBag) multiste
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Loading available zones"))
+	ui.Say(fmt.Sprintf("Loading available zones ..."))
 	zones, err := listZones(client)
 	if err != nil {
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	ui.Message(fmt.Sprintf("Available zones: %s", strings.Join(zones, " ")))
-	state.Put("azs", zones)
+	if s.AvailabilityZone != "" {
+		isExist := false
+		for _, az := range zones {
+			if az == s.AvailabilityZone {
+				isExist = true
+				break
+			}
+		}
+		if !isExist {
+			err = fmt.Errorf("the specified availability_zone %s is not exist or available", s.AvailabilityZone)
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
+		ui.Message(fmt.Sprintf("the specified availability_zone %s is available", s.AvailabilityZone))
+	} else {
+		ui.Message(fmt.Sprintf("Available zones: %s", strings.Join(zones, " ")))
+		// select an rand availability zone
+		randIndex := rand.Intn(len(zones))
+		s.AvailabilityZone = zones[randIndex]
+		ui.Message(fmt.Sprintf("Select %s as the available zone", s.AvailabilityZone))
+	}
+
+	state.Put("availability_zone", s.AvailabilityZone)
 	return multistep.ActionContinue
 }
 

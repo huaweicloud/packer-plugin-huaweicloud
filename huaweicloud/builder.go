@@ -89,7 +89,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	// Build the steps
 	steps := []multistep.Step{
-		&StepLoadAZ{},
+		&StepLoadAZ{
+			AvailabilityZone: b.config.AvailabilityZone,
+		},
 		&StepLoadFlavor{
 			Flavor: b.config.Flavor,
 		},
@@ -106,10 +108,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SourceProperties: b.config.SourceImageFilters.Filters.Properties,
 		},
 		&StepCreateVolume{
-			UseBlockStorageVolume:  b.config.UseBlockStorageVolume,
-			VolumeName:             b.config.VolumeName,
-			VolumeType:             b.config.VolumeType,
-			VolumeAvailabilityZone: b.config.VolumeAvailabilityZone,
+			UseBlockStorageVolume: b.config.UseBlockStorageVolume,
+			VolumeName:            b.config.VolumeName,
+			VolumeType:            b.config.VolumeType,
 		},
 		&StepRunSourceServer{
 			Name:                  b.config.InstanceName,
@@ -118,7 +119,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Ports:                 b.config.Ports,
 			VpcID:                 b.config.VpcID,
 			Subnets:               b.config.Subnets,
-			AvailabilityZone:      b.config.AvailabilityZone,
 			UserData:              b.config.UserData,
 			UserDataFile:          b.config.UserDataFile,
 			ConfigDrive:           b.config.ConfigDrive,

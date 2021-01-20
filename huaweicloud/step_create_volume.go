@@ -57,11 +57,12 @@ func (s *StepCreateVolume) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 
 	ui.Say("Creating volume...")
+	availabilityZone := state.Get("availability_zone").(string)
 	volumeOpts := volumes.CreateOpts{
 		Size:             volumeSize,
 		VolumeType:       s.VolumeType,
-		AvailabilityZone: s.VolumeAvailabilityZone,
 		Name:             s.VolumeName,
+		AvailabilityZone: availabilityZone,
 		ImageID:          sourceImage,
 	}
 	volume, err := volumes.Create(blockStorageClient, volumeOpts).Extract()

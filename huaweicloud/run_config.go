@@ -87,9 +87,8 @@ type RunConfig struct {
 	// The ID, name, or full URL for the desired flavor for the server to be
 	// created.
 	Flavor string `mapstructure:"flavor" required:"true"`
-	// The availability zone to launch the server in. If this isn't specified,
-	// the default enforced by your OpenStack cluster will be used. This may be
-	// required for some OpenStack clusters.
+	// The availability zone to launch the server in.
+	// If omitted, a random availability zone in the region will be used.
 	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
 	// The ID or name of an external network that can be used for creation of a
 	// new floating IP.
@@ -162,11 +161,6 @@ type RunConfig struct {
 	// source image bytes size. Note that in some cases this needs to be
 	// specified, if use_blockstorage_volume is true.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
-	// Availability zone of the Block Storage service volume. If omitted,
-	// Compute instance availability zone will be used. If both of Compute
-	// instance and Block Storage volume availability zones aren't specified,
-	// the default enforced by your OpenStack cluster will be used.
-	VolumeAvailabilityZone string `mapstructure:"volume_availability_zone" required:"false"`
 
 	sourceImageOpts images.ListOpts
 }
@@ -272,12 +266,6 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 
 	c.UseBlockStorageVolume = true
 	if c.UseBlockStorageVolume {
-		// Use Compute instance availability zone for the Block Storage volume
-		// if it's not provided.
-		if c.VolumeAvailabilityZone == "" {
-			c.VolumeAvailabilityZone = c.AvailabilityZone
-		}
-
 		// Use random name for the Block Storage volume if it's not provided.
 		if c.VolumeName == "" {
 			c.VolumeName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())

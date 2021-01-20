@@ -112,7 +112,6 @@ type FlatConfig struct {
 	VolumeName                  *string                 `mapstructure:"volume_name" required:"false" cty:"volume_name"`
 	VolumeType                  *string                 `mapstructure:"volume_type" required:"false" cty:"volume_type"`
 	VolumeSize                  *int                    `mapstructure:"volume_size" required:"false" cty:"volume_size"`
-	VolumeAvailabilityZone      *string                 `mapstructure:"volume_availability_zone" required:"false" cty:"volume_availability_zone"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -230,7 +229,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"volume_name":                   &hcldec.AttrSpec{Name: "volume_name", Type: cty.String, Required: false},
 		"volume_type":                   &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                   &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
-		"volume_availability_zone":      &hcldec.AttrSpec{Name: "volume_availability_zone", Type: cty.String, Required: false},
 	}
 	return s
 }
