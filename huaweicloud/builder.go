@@ -153,9 +153,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepDetachVolume{
 			UseBlockStorageVolume: b.config.UseBlockStorageVolume,
 		},
-		&stepCreateImage{
-			UseBlockStorageVolume: b.config.UseBlockStorageVolume,
-		},
+		&stepCreateImage{},
 		&stepUpdateImageTags{},
 		&stepUpdateImageVisibility{},
 		&stepAddImageMembers{},
