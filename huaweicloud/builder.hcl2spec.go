@@ -90,8 +90,6 @@ type FlatConfig struct {
 	SourceImageFilters          *FlatImageFilter        `mapstructure:"source_image_filter" required:"true" cty:"source_image_filter"`
 	Flavor                      *string                 `mapstructure:"flavor" required:"true" cty:"flavor"`
 	AvailabilityZone            *string                 `mapstructure:"availability_zone" required:"false" cty:"availability_zone"`
-	FloatingIPNetwork           *string                 `mapstructure:"floating_ip_network" required:"false" cty:"floating_ip_network"`
-	InstanceFloatingIPNet       *string                 `mapstructure:"instance_floating_ip_net" required:"false" cty:"instance_floating_ip_net"`
 	FloatingIP                  *string                 `mapstructure:"floating_ip" required:"false" cty:"floating_ip"`
 	ReuseIPs                    *bool                   `mapstructure:"reuse_ips" required:"false" cty:"reuse_ips"`
 	EIPType                     *string                 `mapstructure:"eip_type" required:"false" cty:"eip_type"`
@@ -107,7 +105,6 @@ type FlatConfig struct {
 	InstanceMetadata            map[string]string       `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata"`
 	ForceDelete                 *bool                   `mapstructure:"force_delete" required:"false" cty:"force_delete"`
 	ConfigDrive                 *bool                   `mapstructure:"config_drive" required:"false" cty:"config_drive"`
-	FloatingIPPool              *string                 `mapstructure:"floating_ip_pool" required:"false" cty:"floating_ip_pool"`
 	UseBlockStorageVolume       *bool                   `mapstructure:"use_blockstorage_volume" required:"false" cty:"use_blockstorage_volume"`
 	VolumeName                  *string                 `mapstructure:"volume_name" required:"false" cty:"volume_name"`
 	VolumeType                  *string                 `mapstructure:"volume_type" required:"false" cty:"volume_type"`
@@ -206,9 +203,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"source_image_filter":           &hcldec.BlockSpec{TypeName: "source_image_filter", Nested: hcldec.ObjectSpec((*FlatImageFilter)(nil).HCL2Spec())},
 		"flavor":                        &hcldec.AttrSpec{Name: "flavor", Type: cty.String, Required: false},
 		"availability_zone":             &hcldec.AttrSpec{Name: "availability_zone", Type: cty.String, Required: false},
-		"rackconnect_wait":              &hcldec.AttrSpec{Name: "rackconnect_wait", Type: cty.Bool, Required: false},
-		"floating_ip_network":           &hcldec.AttrSpec{Name: "floating_ip_network", Type: cty.String, Required: false},
-		"instance_floating_ip_net":      &hcldec.AttrSpec{Name: "instance_floating_ip_net", Type: cty.String, Required: false},
 		"floating_ip":                   &hcldec.AttrSpec{Name: "floating_ip", Type: cty.String, Required: false},
 		"reuse_ips":                     &hcldec.AttrSpec{Name: "reuse_ips", Type: cty.Bool, Required: false},
 		"eip_type":                      &hcldec.AttrSpec{Name: "eip_type", Type: cty.String, Required: false},
@@ -224,7 +218,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_metadata":             &hcldec.BlockAttrsSpec{TypeName: "instance_metadata", ElementType: cty.String, Required: false},
 		"force_delete":                  &hcldec.AttrSpec{Name: "force_delete", Type: cty.Bool, Required: false},
 		"config_drive":                  &hcldec.AttrSpec{Name: "config_drive", Type: cty.Bool, Required: false},
-		"floating_ip_pool":              &hcldec.AttrSpec{Name: "floating_ip_pool", Type: cty.String, Required: false},
 		"use_blockstorage_volume":       &hcldec.AttrSpec{Name: "use_blockstorage_volume", Type: cty.Bool, Required: false},
 		"volume_name":                   &hcldec.AttrSpec{Name: "volume_name", Type: cty.String, Required: false},
 		"volume_type":                   &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},

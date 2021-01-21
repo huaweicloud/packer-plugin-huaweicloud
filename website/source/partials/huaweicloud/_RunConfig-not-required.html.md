@@ -12,16 +12,6 @@
 -   `availability_zone` (string) - The availability zone to launch the server in.
     If omitted, a random availability zone in the region will be used.
     
--   `floating_ip_network` (string) - The ID or name of an external network that can be used for creation of a
-    new floating IP.
-    
--   `instance_floating_ip_net` (string) - The ID of the network to which the instance is attached and which should
-    be used to associate with the floating IP. This provides control over
-    the floating ip association on multi-homed instances. The association
-    otherwise depends on a first-returned-interface policy which could fail
-    if the network to which it is connected is unreachable from the floating
-    IP network.
-    
 -   `floating_ip` (string) - A specific floating IP to assign to this instance.
     
 -   `reuse_ips` (bool) - Whether or not to attempt to reuse existing unassigned floating ips in
@@ -66,8 +56,6 @@
     default this is false.
     
 -   `config_drive` (bool) - Whether or not nova should use ConfigDrive for cloud-init metadata.
-    
--   `floating_ip_pool` (string) - Deprecated use floating_ip_network instead.
     
 -   `use_blockstorage_volume` (bool) - Use Block Storage service volume for the instance root volume instead of
     Compute service local volume (default).

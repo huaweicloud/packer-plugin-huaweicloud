@@ -131,12 +131,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Comm:  &b.config.RunConfig.Comm,
 		},
 		&StepAllocateIp{
-			FloatingIPNetwork:     b.config.FloatingIPNetwork,
-			FloatingIP:            b.config.FloatingIP,
-			ReuseIPs:              b.config.ReuseIPs,
-			EIPType:               b.config.EIPType,
-			EIPBandwidthSize:      b.config.EIPBandwidthSize,
-			InstanceFloatingIPNet: b.config.InstanceFloatingIPNet,
+			FloatingIP:       b.config.FloatingIP,
+			ReuseIPs:         b.config.ReuseIPs,
+			EIPType:          b.config.EIPType,
+			EIPBandwidthSize: b.config.EIPBandwidthSize,
 		},
 		&communicator.StepConnect{
 			Config: &b.config.RunConfig.Comm,
