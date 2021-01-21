@@ -102,10 +102,16 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		TLSClientConfig: tlsConfig,
 	}
 
+	var enableLog bool
+	debugEnv := os.Getenv("HW_DEBUG")
+	if debugEnv != "" && debugEnv != "0" {
+		enableLog = true
+	}
+
 	client.HTTPClient = http.Client{
 		Transport: &LogRoundTripper{
 			Rt:    transport,
-			Debug: os.Getenv("PACKER_LOG") != "" && os.Getenv("PACKER_LOG") != "0",
+			Debug: enableLog,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if client.AKSKAuthOptions.AccessKey != "" {
