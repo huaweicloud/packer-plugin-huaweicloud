@@ -4,10 +4,8 @@ package huaweicloud
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/packer/template/interpolate"
-	imageservice "github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
 // ImageConfig is for common configuration related to creating Images.
@@ -16,15 +14,10 @@ type ImageConfig struct {
 	ImageName string `mapstructure:"image_name" required:"true"`
 	// Glance metadata that will be applied to the image.
 	ImageMetadata map[string]string `mapstructure:"metadata" required:"false"`
-	// One of "public", "private", "shared", or "community".
-	ImageVisibility imageservice.ImageVisibility `mapstructure:"image_visibility" required:"false"`
 	// List of members to add to the image after creation. An image member is
 	// usually a project (also called the "tenant") with whom the image is
 	// shared.
 	ImageMembers []string `mapstructure:"image_members" required:"false"`
-	// Disk format of the resulting image. This option works if
-	// use_blockstorage_volume is true.
-	ImageDiskFormat string `mapstructure:"image_disk_format" required:"false"`
 	// List of tags to add to the image after creation.
 	ImageTags []string `mapstructure:"image_tags" required:"false"`
 	// Minimum disk size needed to boot image, in gigabytes.
@@ -46,23 +39,6 @@ func (c *ImageConfig) Prepare(ctx *interpolate.Context) []error {
 		c.ImageMetadata = map[string]string{"image_type": "image"}
 	} else if c.ImageMetadata["image_type"] == "" {
 		c.ImageMetadata["image_type"] = "image"
-	}
-
-	// ImageVisibility values
-	// https://wiki.openstack.org/wiki/Glance-v2-community-image-visibility-design
-	if c.ImageVisibility != "" {
-		validVals := []imageservice.ImageVisibility{"public", "private", "shared", "community"}
-		valid := false
-		for _, val := range validVals {
-			if strings.EqualFold(string(c.ImageVisibility), string(val)) {
-				valid = true
-				c.ImageVisibility = val
-				break
-			}
-		}
-		if !valid {
-			errs = append(errs, fmt.Errorf("Unknown visibility value %s", c.ImageVisibility))
-		}
 	}
 
 	if c.ImageMinDisk < 0 {
