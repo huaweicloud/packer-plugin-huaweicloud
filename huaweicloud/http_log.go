@@ -127,13 +127,21 @@ func (lrt *LogRoundTripper) formatJSON(raw []byte) string {
 	}
 
 	// Ignore the catalog
-	if _, ok := data["catalog"]; ok {
-		return ""
+	if _, ok := data["catalog"].([]interface{}); ok {
+		return "{ **skipped** }"
 	}
 	if v, ok := data["token"].(map[string]interface{}); ok {
 		if _, ok := v["catalog"]; ok {
-			return ""
+			return "{ **skipped** }"
 		}
+	}
+
+	// Ignore the services and endpoints
+	if _, ok := data["services"].([]interface{}); ok {
+		return "{ **skipped** }"
+	}
+	if _, ok := data["endpoints"].([]interface{}); ok {
+		return "{ **skipped** }"
 	}
 
 	pretty, err := json.MarshalIndent(data, "", "  ")
