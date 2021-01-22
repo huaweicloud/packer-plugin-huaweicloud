@@ -7,10 +7,9 @@ import (
 	"log"
 	"time"
 
-	commonhelper "github.com/hashicorp/packer/helper/common"
-	"github.com/hashicorp/packer/helper/communicator"
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"golang.org/x/crypto/ssh"
 )
@@ -78,12 +77,9 @@ func (s *StepGetPassword) Run(ctx context.Context, state multistep.StateBag) mul
 			"Password (since debug is enabled) \"%s\"", s.Comm.WinRMPassword))
 	}
 
-	commonhelper.SetSharedState("winrm_password", s.Comm.WinRMPassword, s.BuildName)
 	packer.LogSecretFilter.Set(s.Comm.WinRMPassword)
 
 	return multistep.ActionContinue
 }
 
-func (s *StepGetPassword) Cleanup(multistep.StateBag) {
-	commonhelper.RemoveSharedStateFile("winrm_password", s.BuildName)
-}
+func (s *StepGetPassword) Cleanup(multistep.StateBag) {}

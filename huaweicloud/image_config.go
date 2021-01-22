@@ -5,7 +5,7 @@ package huaweicloud
 import (
 	"fmt"
 
-	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
 // ImageConfig is for common configuration related to creating Images.

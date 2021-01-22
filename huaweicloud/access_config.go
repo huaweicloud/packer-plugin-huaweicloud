@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack"
 	huaweisdk "github.com/huaweicloud/golangsdk/openstack"
