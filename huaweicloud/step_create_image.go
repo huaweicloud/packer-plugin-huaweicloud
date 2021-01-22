@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/hashicorp/packer/helper/multistep"
 	"github.com/hashicorp/packer/packer"
-	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
+	"github.com/huaweicloud/golangsdk/openstack/ims/v2/cloudimages"
 )
+
+// timeoutCreate means the maximum time in seconds to create the image
+const timeoutCreate int = 900
 
 type stepCreateImage struct{}
 
@@ -19,14 +20,6 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	config := state.Get("config").(*Config)
 	server := state.Get("server").(*servers.Server)
 	ui := state.Get("ui").(packer.Ui)
-
-	// We need the v2 compute client
-	computeClient, err := config.computeV2Client()
-	if err != nil {
-		err = fmt.Errorf("Error initializing compute client: %s", err)
-		state.Put("error", err)
-		return multistep.ActionHalt
-	}
 
 	// We need the v2 image client
 	imageClient, err := config.imageV2Client()
@@ -37,14 +30,24 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	}
 
 	// Create the image.
-	// Image source depends on the type of the Compute instance. It can be
-	// Block Storage service volume or regular Compute service local volume.
 	ui.Say(fmt.Sprintf("Creating the image: %s", config.ImageName))
 
-	imageId, err := servers.CreateImage(computeClient, server.ID, servers.CreateImageOpts{
-		Name:     config.ImageName,
-		Metadata: config.ImageMetadata,
-	}).ExtractImageID()
+	taglist := []cloudimages.ImageTag{}
+	for k, v := range config.ImageTags {
+		tag := cloudimages.ImageTag{
+			Key:   k,
+			Value: v,
+		}
+		taglist = append(taglist, tag)
+	}
+	createOpts := &cloudimages.CreateByServerOpts{
+		Name:        config.ImageName,
+		Description: config.ImageDescription,
+		InstanceId:  server.ID,
+		ImageTags:   taglist,
+	}
+	log.Printf("[DEBUG] Create image options: %#v", createOpts)
+	v, err := cloudimages.CreateImageByServer(imageClient, createOpts).ExtractJobResponse()
 	if err != nil {
 		err := fmt.Errorf("Error creating image: %s", err)
 		state.Put("error", err)
@@ -52,57 +55,32 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 
-	// Set the Image ID in the state
-	ui.Message(fmt.Sprintf("Image: %s", imageId))
-	state.Put("image", imageId)
-
-	// Wait for the image to become ready
-	ui.Say(fmt.Sprintf("Waiting for image %s (image id: %s) to become ready...", config.ImageName, imageId))
-	if err := WaitForImage(ctx, imageClient, imageId); err != nil {
+	// Wait for the image to become available
+	ui.Say(fmt.Sprintf("Waiting for image %s to become available ...", config.ImageName))
+	err = cloudimages.WaitForJobSuccess(imageClient, timeoutCreate, v.JobID)
+	if err != nil {
 		err := fmt.Errorf("Error waiting for image: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
+	entity, err := cloudimages.GetJobEntity(imageClient, v.JobID, "image_id")
+	if err != nil {
+		err := fmt.Errorf("Error extracting image id: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	// Set the Image ID in the state
+	imageID := entity.(string)
+	ui.Message(fmt.Sprintf("Image: %s", imageID))
+	state.Put("image", imageID)
+
 	return multistep.ActionContinue
 }
 
 func (s *stepCreateImage) Cleanup(multistep.StateBag) {
 	// No cleanup...
-}
-
-// WaitForImage waits for the given Image ID to become ready.
-func WaitForImage(ctx context.Context, client *golangsdk.ServiceClient, imageId string) error {
-	maxNumErrors := 10
-	numErrors := 0
-
-	for {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		image, err := images.Get(client, imageId).Extract()
-		if err != nil {
-			errCode, ok := err.(*golangsdk.ErrUnexpectedResponseCode)
-			if ok && (errCode.Actual == 500 || errCode.Actual == 404) {
-				numErrors++
-				if numErrors >= maxNumErrors {
-					log.Printf("[ERROR] Maximum number of errors (%d) reached; failing with: %s", numErrors, err)
-					return err
-				}
-				log.Printf("[ERROR] %d error received, will ignore and retry: %s", errCode.Actual, err)
-				time.Sleep(2 * time.Second)
-				continue
-			}
-
-			return err
-		}
-
-		if image.Status == "active" {
-			return nil
-		}
-
-		log.Printf("Waiting for image creation status: %s", image.Status)
-		time.Sleep(5 * time.Second)
-	}
 }

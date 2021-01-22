@@ -57,6 +57,10 @@ builder.
 -   `availability_zone` (string) - The availability zone to build resources in Huawei Cloud.
     If omitted, a random availability zone in the region will be used.
 
+-   `image_description` (string) - Specifies the image description.
+
+-   `image_tags` (map[string]string) - The tags of the image in key/pair format.
+
 -   `eip_type` (string) - The type of eip. See the api doc to get the value.
 
 -   `eip_bandwidth_size` (int) - The size of eip bandwidth.
