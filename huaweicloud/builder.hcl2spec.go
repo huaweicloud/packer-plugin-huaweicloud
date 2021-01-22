@@ -36,9 +36,9 @@ type FlatConfig struct {
 	ApplicationCredentialSecret *string           `mapstructure:"application_credential_secret" required:"false" cty:"application_credential_secret"`
 	Cloud                       *string           `mapstructure:"cloud" required:"false" cty:"cloud"`
 	ImageName                   *string           `mapstructure:"image_name" required:"true" cty:"image_name"`
-	ImageMetadata               map[string]string `mapstructure:"metadata" required:"false" cty:"metadata"`
+	ImageDescription            *string           `mapstructure:"image_description" required:"false" cty:"image_description"`
+	ImageTags                   map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags"`
 	ImageMembers                []string          `mapstructure:"image_members" required:"false" cty:"image_members"`
-	ImageTags                   []string          `mapstructure:"image_tags" required:"false" cty:"image_tags"`
 	ImageMinDisk                *int              `mapstructure:"image_min_disk" required:"false" cty:"image_min_disk"`
 	Type                        *string           `mapstructure:"communicator" cty:"communicator"`
 	PauseBeforeConnect          *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting"`
@@ -147,9 +147,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"application_credential_secret": &hcldec.AttrSpec{Name: "application_credential_secret", Type: cty.String, Required: false},
 		"cloud":                         &hcldec.AttrSpec{Name: "cloud", Type: cty.String, Required: false},
 		"image_name":                    &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
-		"metadata":                      &hcldec.BlockAttrsSpec{TypeName: "metadata", ElementType: cty.String, Required: false},
+		"image_description":             &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"image_tags":                    &hcldec.BlockAttrsSpec{TypeName: "image_tags", ElementType: cty.String, Required: false},
 		"image_members":                 &hcldec.AttrSpec{Name: "image_members", Type: cty.List(cty.String), Required: false},
-		"image_tags":                    &hcldec.AttrSpec{Name: "image_tags", Type: cty.List(cty.String), Required: false},
 		"image_min_disk":                &hcldec.AttrSpec{Name: "image_min_disk", Type: cty.Number, Required: false},
 		"communicator":                  &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":       &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
