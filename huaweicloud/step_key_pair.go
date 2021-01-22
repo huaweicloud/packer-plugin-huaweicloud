@@ -9,10 +9,10 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/hashicorp/packer/helper/communicator"
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
-	"github.com/hashicorp/packer/packer/tmp"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/tmp"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"golang.org/x/crypto/ssh"
 )

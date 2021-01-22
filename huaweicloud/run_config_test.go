@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/mitchellh/mapstructure"
 )

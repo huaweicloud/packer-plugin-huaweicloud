@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/huaweicloud/golangsdk/pagination"
 )

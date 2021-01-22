@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/packer/common/uuid"
-	"github.com/hashicorp/packer/helper/communicator"
-	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/uuid"
 	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 )
 
