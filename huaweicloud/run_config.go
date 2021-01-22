@@ -1,4 +1,3 @@
-//go:generate struct-markdown
 //go:generate mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions
 
 package huaweicloud
