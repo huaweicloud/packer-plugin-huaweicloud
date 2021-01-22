@@ -9,9 +9,9 @@ import (
 	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/members"
 )
 
-type stepAddImageMembers struct{}
+type stepUpdateImageMembers struct{}
 
-func (s *stepAddImageMembers) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepUpdateImageMembers) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	imageId := state.Get("image").(string)
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
@@ -40,6 +40,6 @@ func (s *stepAddImageMembers) Run(ctx context.Context, state multistep.StateBag)
 	return multistep.ActionContinue
 }
 
-func (s *stepAddImageMembers) Cleanup(multistep.StateBag) {
+func (s *stepUpdateImageMembers) Cleanup(multistep.StateBag) {
 	// No cleanup...
 }
