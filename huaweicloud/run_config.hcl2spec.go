@@ -36,7 +36,6 @@ func (*FlatImageFilter) HCL2Spec() map[string]hcldec.Spec {
 type FlatImageFilterOptions struct {
 	Name       *string           `mapstructure:"name" cty:"name"`
 	Owner      *string           `mapstructure:"owner" cty:"owner"`
-	Tags       []string          `mapstructure:"tags" cty:"tags"`
 	Visibility *string           `mapstructure:"visibility" cty:"visibility"`
 	Properties map[string]string `mapstructure:"properties" cty:"properties"`
 }
@@ -55,7 +54,6 @@ func (*FlatImageFilterOptions) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"name":       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"owner":      &hcldec.AttrSpec{Name: "owner", Type: cty.String, Required: false},
-		"tags":       &hcldec.AttrSpec{Name: "tags", Type: cty.List(cty.String), Required: false},
 		"visibility": &hcldec.AttrSpec{Name: "visibility", Type: cty.String, Required: false},
 		"properties": &hcldec.BlockAttrsSpec{TypeName: "properties", ElementType: cty.String, Required: false},
 	}
