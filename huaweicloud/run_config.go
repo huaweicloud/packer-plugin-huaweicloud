@@ -1,4 +1,3 @@
-//go:generate struct-markdown
 //go:generate mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions
 
 package huaweicloud
@@ -26,14 +25,14 @@ type RunConfig struct {
 	// connect via whichever IP address is returned first from the OpenStack
 	// API.
 	SSHIPVersion string `mapstructure:"ssh_ip_version" required:"false"`
-	// The ID or full URL to the base image to use. This is the image that will
+	// The ID of the base image to use. This is the image that will
 	// be used to launch a new server and provision it. Unless you specify
 	// completely custom SSH settings, the source image must have cloud-init
 	// installed so that the keypair gets assigned properly.
-	SourceImage string `mapstructure:"source_image" required:"true"`
+	SourceImage string `mapstructure:"source_image" required:"false"`
 	// The name of the base image to use. This is an alternative way of
 	// providing source_image and only either of them can be specified.
-	SourceImageName string `mapstructure:"source_image_name" required:"true"`
+	SourceImageName string `mapstructure:"source_image_name" required:"false"`
 	// Filters used to populate filter options. Example:
 	//
 	// ``` json {
@@ -42,7 +41,6 @@ type RunConfig struct {
 	//             "name": "ubuntu-16.04",
 	//             "visibility": "protected",
 	//             "owner": "d1a588cf4b0743344508dc145649372d1",
-	//             "tag": "prod",
 	//             "properties": {
 	//                 "os_distro": "ubuntu"
 	//             }
@@ -69,8 +67,6 @@ type RunConfig struct {
 	//
 	//     -   owner (string)
 	//
-	//     -   tag (string)
-	//
 	//     -   visibility (string)
 	//
 	//     -   properties (map of strings to strings) (fields that can be set
@@ -83,7 +79,7 @@ type RunConfig struct {
 	// You may set use this in place of `source_image` If `source_image_filter`
 	// is provided alongside `source_image`, the `source_image` will override
 	// the filter. The filter will not be used in this case.
-	SourceImageFilters ImageFilter `mapstructure:"source_image_filter" required:"true"`
+	SourceImageFilters ImageFilter `mapstructure:"source_image_filter" required:"false"`
 	// The ID, name, or full URL for the desired flavor for the server to be
 	// created.
 	Flavor string `mapstructure:"flavor" required:"true"`
@@ -136,7 +132,7 @@ type RunConfig struct {
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
 	// Use Block Storage service volume for the instance root volume instead of
-	// Compute service local volume (default).
+	// Compute service local volume, this value is always true.
 	UseBlockStorageVolume bool `mapstructure:"use_blockstorage_volume" required:"false"`
 	// Name of the Block Storage service volume. If this isn't specified,
 	// random string will be used.
@@ -166,13 +162,12 @@ type ImageFilter struct {
 type ImageFilterOptions struct {
 	Name       string            `mapstructure:"name"`
 	Owner      string            `mapstructure:"owner"`
-	Tag        string            `mapstructure:"tag"`
 	Visibility string            `mapstructure:"visibility"`
 	Properties map[string]string `mapstructure:"properties"`
 }
 
 func (f *ImageFilterOptions) Empty() bool {
-	return f.Name == "" && f.Owner == "" && f.Tag == "" && f.Visibility == "" && len(f.Properties) == 0
+	return f.Name == "" && f.Owner == "" && f.Visibility == "" && len(f.Properties) == 0
 }
 
 func (f *ImageFilterOptions) Build() (*images.ListOpts, error) {
@@ -189,9 +184,6 @@ func (f *ImageFilterOptions) Build() (*images.ListOpts, error) {
 	}
 	if f.Owner != "" {
 		opts.Owner = f.Owner
-	}
-	if f.Tag != "" {
-		opts.Tag = f.Tag
 	}
 	if f.Visibility != "" {
 		v, err := getImageVisibility(f.Visibility)
