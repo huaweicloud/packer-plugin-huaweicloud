@@ -16,13 +16,13 @@ import (
 // and details on how to access that launched image.
 type RunConfig struct {
 	Comm communicator.Config `mapstructure:",squash"`
-	// The type of interface to connect via SSH. Values useful for Rackspace
-	// are "public" or "private", and the default behavior is to connect via
-	// whichever is returned first from the OpenStack API.
+	// The type of interface to connect via SSH, valid values are "public"
+	// and "private", and the default behavior is to connect via
+	// whichever is returned first from the HuaweiCloud API.
 	SSHInterface string `mapstructure:"ssh_interface" required:"false"`
 	// The IP version to use for SSH connections, valid values are `4` and `6`.
 	// Useful on dual stacked instances where the default behavior is to
-	// connect via whichever IP address is returned first from the OpenStack
+	// connect via whichever IP address is returned first from the HuaweiCloud
 	// API.
 	SSHIPVersion string `mapstructure:"ssh_ip_version" required:"false"`
 	// The ID of the base image to use. This is the image that will
@@ -38,12 +38,8 @@ type RunConfig struct {
 	// ``` json {
 	//     "source_image_filter": {
 	//         "filters": {
-	//             "name": "ubuntu-16.04",
-	//             "visibility": "protected",
-	//             "owner": "d1a588cf4b0743344508dc145649372d1",
-	//             "properties": {
-	//                 "os_distro": "ubuntu"
-	//             }
+	//             "name": "Ubuntu 18.04 server 64bit",
+	//             "visibility": "public",
 	//         },
 	//         "most_recent": true
 	//     }
@@ -59,18 +55,13 @@ type RunConfig struct {
 	// -   `filters` (map of strings) - filters used to select a
 	// `source_image`.
 	//     NOTE: This will fail unless *exactly* one image is returned, or
-	//     `most_recent` is set to true. Of the filters described in
-	//     [ImageService](https://developer.openstack.org/api-ref/image/v2/), the
-	//     following are valid:
+	//     `most_recent` is set to true.
+	//     The following filters are valid:
 	//
 	//     -   name (string)
-	//
 	//     -   owner (string)
-	//
 	//     -   visibility (string)
-	//
-	//     -   properties (map of strings to strings) (fields that can be set
-	//         with `openstack image set --property key=value`)
+	//     -   properties (map of strings to strings)
 	//
 	// -   `most_recent` (boolean) - Selects the newest created image when
 	// true.
@@ -80,8 +71,7 @@ type RunConfig struct {
 	// is provided alongside `source_image`, the `source_image` will override
 	// the filter. The filter will not be used in this case.
 	SourceImageFilters ImageFilter `mapstructure:"source_image_filter" required:"false"`
-	// The ID, name, or full URL for the desired flavor for the server to be
-	// created.
+	// The ID or name for the desired flavor for the server to be created.
 	Flavor string `mapstructure:"flavor" required:"true"`
 	// The availability zone to launch the server in.
 	// If omitted, a random availability zone in the region will be used.
@@ -90,10 +80,10 @@ type RunConfig struct {
 	FloatingIP string `mapstructure:"floating_ip" required:"false"`
 	// Whether or not to attempt to reuse existing unassigned floating ips in
 	// the project before allocating a new one. Note that it is not possible to
-	// safely do this concurrently, so if you are running multiple openstack
-	// builds concurrently, or if other processes are assigning and using
-	// floating IPs in the same openstack project while packer is running, you
-	// should not set this to true. Defaults to false.
+	// safely do this concurrently, so if you are running multiple builds
+	// concurrently, or if other processes are assigning and using floating IPs
+	// in the same project while packer is running, you should not set this to true.
+	// Defaults to false.
 	ReuseIPs bool `mapstructure:"reuse_ips" required:"false"`
 	// The type of eip. See the api doc to get the value.
 	EIPType string `mapstructure:"eip_type" required:"false"`
@@ -125,7 +115,7 @@ type RunConfig struct {
 	// called server properties in some documentation. The strings have a max
 	// size of 255 bytes each.
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
-	// Whether to force the OpenStack instance to be forcefully deleted. This
+	// Whether to force the HuaweiCloud instance to be forcefully deleted. This
 	// is useful for environments that have reclaim / soft deletion enabled. By
 	// default this is false.
 	ForceDelete bool `mapstructure:"force_delete" required:"false"`
@@ -137,8 +127,7 @@ type RunConfig struct {
 	// Name of the Block Storage service volume. If this isn't specified,
 	// random string will be used.
 	VolumeName string `mapstructure:"volume_name" required:"false"`
-	// Type of the Block Storage service volume. If this isn't specified, the
-	// default enforced by your OpenStack cluster will be used.
+	// Type of the Block Storage service volume.
 	VolumeType string `mapstructure:"volume_type" required:"false"`
 	// Size of the Block Storage service volume in GB. If this isn't specified,
 	// it is set to source image min disk value (if set) or calculated from the
@@ -151,8 +140,7 @@ type RunConfig struct {
 
 type ImageFilter struct {
 	// filters used to select a source_image. NOTE: This will fail unless
-	// exactly one image is returned, or most_recent is set to true. Of the
-	// filters described in ImageService, the following are valid:
+	// exactly one image is returned, or most_recent is set to true.
 	Filters ImageFilterOptions `mapstructure:"filters" required:"false"`
 	// Selects the newest created image when true. This is most useful for
 	// selecting a daily distro build.

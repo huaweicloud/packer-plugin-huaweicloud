@@ -1,21 +1,12 @@
 package huaweicloud
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/mitchellh/mapstructure"
 )
-
-func init() {
-	// Clear out the openstack env vars so they don't
-	// affect our tests.
-	os.Setenv("SDK_USERNAME", "")
-	os.Setenv("SDK_PASSWORD", "")
-	os.Setenv("SDK_PROVIDER", "")
-}
 
 func testRunConfig() *RunConfig {
 	return &RunConfig{

@@ -47,7 +47,7 @@ func (s *StepAllocateIp) Run(ctx context.Context, state multistep.StateBag) mult
 		return multistep.ActionHalt
 	}
 
-	// Try to Use the OpenStack floating IP by checking provided parameters in
+	// Try to Use the floating IP by checking provided parameters in
 	// the following order:
 	//  - try to use "FloatingIP" ID directly if it's provided
 	//  - try to find free floating IP in the project if "ReuseIPs" is set

@@ -18,7 +18,7 @@ var refreshGracePeriod = 30 * time.Second
 //
 // `result` is any object that will be returned as the final object after
 // waiting for state change. This allows you to return the final updated object,
-// for example an openstack instance after refreshing it.
+// for example an HuaweiCloud instance after refreshing it.
 // `state` is the latest state of that object.
 // `err` is any error that may have happened while refreshing the state.
 type StateRefreshFunc func() (result interface{}, state string, err error)
