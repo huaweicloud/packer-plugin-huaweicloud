@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// StepGetPassword reads the password from a booted OpenStack server and sets
+// StepGetPassword reads the password from a booted HuaweiCloud server and sets
 // it on the WinRM config.
 type StepGetPassword struct {
 	Debug     bool

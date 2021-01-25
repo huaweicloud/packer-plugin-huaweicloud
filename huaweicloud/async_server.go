@@ -20,7 +20,7 @@ type ServerStateChangeConf struct {
 }
 
 // ServerStateRefreshFunc returns a StateRefreshFunc that is used to watch
-// an openstack server.
+// an HuaweiCloud server.
 func ServerStateRefreshFunc(
 	client *golangsdk.ServiceClient, serverID string) StateRefreshFunc {
 	return func() (interface{}, string, error) {

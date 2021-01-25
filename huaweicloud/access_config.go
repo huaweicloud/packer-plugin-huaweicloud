@@ -17,7 +17,7 @@ const (
 	DefaultAuthURL = "https://iam.myhuaweicloud.com:443/v3"
 )
 
-// AccessConfig is for common configuration related to openstack access
+// AccessConfig is for common configuration related to HuaweiCloud access
 type AccessConfig struct {
 	// The access key of the HuaweiCloud to use.
 	// If omitted, the HW_ACCESS_KEY environment variable is used.
