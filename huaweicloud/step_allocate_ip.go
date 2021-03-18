@@ -174,7 +174,7 @@ func (s *StepAllocateIp) createEIP(ui packer.Ui, config *Config, stateBag multis
 		Bandwidth: eips.BandwidthOpts{
 			Size:       s.EIPBandwidthSize,
 			ShareType:  "PER",
-			ChargeMode: "bandwidth",
+			ChargeMode: "traffic",
 			Name:       fmt.Sprintf("packer_eip_bandwidth_%v", time.Now().Unix()),
 		},
 	}
