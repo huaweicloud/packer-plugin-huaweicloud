@@ -59,6 +59,14 @@ builder.
 
 -   `image_description` (string) - Specifies the image description.
 
+-   `image_members` ([]string) - List of members to add to the image after creation. An image member is
+  usually a project (also called the "tenant") with whom the image is
+  shared.
+
+-   `image_auto_accept_members` (bool) - When true, perform the image accept so the members can see the image in their
+  project. This requires a user with priveleges both in the build project and
+  in the members provided. Defaults to false.
+
 -   `image_tags` (map[string]string) - The tags of the image in key/pair format.
 
 -   `eip_type` (string) - The type of eip. See the api doc to get the value.
