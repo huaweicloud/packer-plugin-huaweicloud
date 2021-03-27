@@ -27,6 +27,7 @@ type FlatConfig struct {
 	ImageName                 *string           `mapstructure:"image_name" required:"true" cty:"image_name"`
 	ImageDescription          *string           `mapstructure:"image_description" required:"false" cty:"image_description"`
 	ImageMembers              []string          `mapstructure:"image_members" required:"false" cty:"image_members"`
+	ImageAutoAcceptMembers    *bool             `mapstructure:"image_auto_accept_members" required:"false" cty:"image_auto_accept_members" hcl:"image_auto_accept_members"`
 	ImageMinDisk              *int              `mapstructure:"image_min_disk" required:"false" cty:"image_min_disk"`
 	ImageTags                 map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator"`
@@ -136,6 +137,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_name":                   &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_description":            &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
 		"image_members":                &hcldec.AttrSpec{Name: "image_members", Type: cty.List(cty.String), Required: false},
+		"image_auto_accept_members":    &hcldec.AttrSpec{Name: "image_auto_accept_members", Type: cty.Bool, Required: false},
 		"image_min_disk":               &hcldec.AttrSpec{Name: "image_min_disk", Type: cty.Number, Required: false},
 		"image_tags":                   &hcldec.BlockAttrsSpec{TypeName: "image_tags", ElementType: cty.String, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
