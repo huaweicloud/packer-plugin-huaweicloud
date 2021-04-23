@@ -3,6 +3,7 @@ package huaweicloud
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -35,7 +36,7 @@ func (s *stepUpdateImageMinDisk) Run(_ context.Context, state multistep.StateBag
 			images.UpdateImageProperty{
 				Op:    "replace",
 				Name:  "/min_disk",
-				Value: string(config.ImageMinDisk),
+				Value: strconv.Itoa(config.ImageMinDisk),
 			},
 		},
 	)
