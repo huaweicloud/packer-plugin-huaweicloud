@@ -5,6 +5,7 @@ GOBIN = $(shell go env GOPATH)/bin
 BINARY_FILE = ${GOBIN}/${BINARY}
 GORELEASER_VER = 0.110.0
 GOLANGCI_LINT_VER = 1.17.1
+TEST?=$(shell go list ./...)
 
 .PHONY: default
 default: build test install
@@ -23,7 +24,7 @@ install: build
 
 .PHONY: test
 test:
-	go test -v . ./huaweicloud
+	go test -v $(TEST) -timeout=3m
 
 .PHONY: lint
 lint:

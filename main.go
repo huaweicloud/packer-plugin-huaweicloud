@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
-	"github.com/huaweicloud/packer-builder-huaweicloud-ecs/huaweicloud"
+	ecsbuilder "github.com/huaweicloud/packer-builder-huaweicloud-ecs/builder/ecs"
 )
 
 func main() {
@@ -11,6 +11,6 @@ func main() {
 		panic(err)
 	}
 
-	server.RegisterBuilder(new(huaweicloud.Builder))
+	server.RegisterBuilder(new(ecsbuilder.Builder))
 	server.Serve()
 }
