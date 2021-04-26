@@ -79,7 +79,7 @@ release:
   # As part of the release doc files are included as a separate deliverable for consumption by Packer.io.
   # To include a separate docs.zip uncomment the extra_files config and the docs.zip command hook above.
   #extra_files:
-  #- glob: ./docs.zip
+  - glob: ./docs.zip
 
 changelog:
   skip: true
