@@ -1,4 +1,5 @@
-//go:generate mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions
+//go:generate packer-sdc struct-markdown
+//go:generate packer-sdc mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions
 
 package ecs
 
