@@ -38,7 +38,7 @@ clean:
 	rm -rf ${BINARY} ${PLUGIN_FILE}
 
 install-gen-deps: ## Install dependencies for code generation
-# 	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc
+	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 
 generate: ## install-gen-deps
 	# add $GOPATH into $PATH when failed
@@ -46,6 +46,6 @@ generate: ## install-gen-deps
 	@go generate -v ./...
 
 ci-release-docs:
-	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@8d357e87ab267b7c37c907f6a4f9337b98d46e6d
+	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 	@packer-sdc renderdocs -src docs -partials docs-partials/ -dst docs/
 	@/bin/sh -c "[ -d docs ] && zip -r docs.zip docs/"
