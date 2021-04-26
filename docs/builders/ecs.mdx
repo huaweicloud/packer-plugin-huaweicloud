@@ -1,0 +1,174 @@
+---
+description: |
+    The `huaweicloud-ecs` Packer builder plugin is able to create new images with
+    HuaweiCloud. The builder takes a source image, runs any provisioning necessary
+    on the image after launching it, then converts it into a reusable image.
+    This reusable image can then be used as the foundation of new servers that are
+    launched within HuaweiCloud.
+page_title: HuaweiCloud Image Builder
+nav_title: HuaweiCloud
+---
+
+# HuaweiCloud Image Builder
+
+Type: `huaweicloud-ecs`
+Artifact BuilderId: `huawei.huaweicloud`
+
+The `huaweicloud-ecs` Packer builder plugin is able to create new images with
+[HuaweiCloud](https://www.huaweicloud.com). The builder takes a source image,
+runs any provisioning necessary on the image after launching it, then converts
+it into a reusable image. This reusable image can then be used as the
+foundation of new servers that are launched within HuaweiCloud.
+
+The builder does *not* manage images. Once it creates an image, it is up to you
+to use it or delete it.
+
+## Configuration Reference
+
+There are many configuration options available for the builder. They are
+segmented below into two categories: required and optional parameters.
+
+In addition to the options listed here,
+a [communicator](/docs/templates/legacy_json_templates/communicator) can be configured for this builder.
+
+### Required:
+
+@include 'builder/ecs/AccessConfig-required.mdx'
+
+@include 'builder/ecs/ImageConfig-required.mdx'
+
+@include 'builder/ecs/RunConfig-required.mdx'
+
+### Optional:
+
+@include 'builder/ecs/AccessConfig-not-required.mdx'
+
+@include 'builder/ecs/ImageConfig-not-required.mdx'
+
+@include 'builder/ecs/RunConfig-not-required.mdx'
+
+
+### Communicator Configuration
+
+In addition to the above options, a communicator can be configured
+for this builder.
+
+#### Optional:
+
+@include 'packer-plugin-sdk/communicator/Config-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSH-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSHTemporaryKeyPair-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSH-Key-Pair-Name-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSH-Private-Key-File-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSH-Agent-Auth-not-required.mdx'
+
+## Basic Example
+
+Here is a basic example for HuaweiCloud.
+
+<Tabs>
+<Tab heading="JSON">
+
+``` json
+{
+    "builders": [
+        {
+            "type": "huaweicloud-ecs",
+            "access_key": "{{ my-access-key }}",
+            "secret_key": "{{ my-secret-key }}",
+            "region": "cn-north-1",
+            "image_name": "{{ image_name }}",
+            "source_image": "{{ source_image }}",
+            "flavor": "s6.large.2",
+            "vpc_id": "{{ vpc_id }}",
+            "subnets": [
+                "{{ subnet }}"
+            ],
+            "security_groups": [
+              "{{ security_group }}"
+            ],
+            "eip_type": "5_bgp",
+            "eip_bandwidth_size": 2,
+            "ssh_username": "root",
+            "ssh_ip_version": "4",
+        }
+    ],
+
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"start install nginx, sleep 20s first\"",
+                "sleep 20",
+                "echo \"run install\"",
+                "yum -y install nginx",
+                "echo \"enable nginx\"",
+                "systemctl enable nginx.service",
+                "echo \"install nginx done\""
+            ]
+        }
+    ]
+}
+```
+
+</Tab>
+<Tab heading="HCL2">
+
+```hcl
+variable "access_key" {
+  type = string
+}
+variable "secret_key" {
+  type = string
+}
+
+variable "source_image_id" {
+  type = string
+}
+variable "vpc_id" {
+  type = string
+}
+variable "subent_id" {
+  type = string
+}
+
+source "huaweicloud-ecs" "basic-example" {
+  region             = "cn-north-1"
+  access_key         = var.access_key
+  secret_key         = var.secret_key
+  flavor             = "s6.large.2"
+  image_name         = "packer-image"
+  source_image       = var.source_image_id
+  vpc_id             = var.vpc_id
+  subnets            = [var.subent_id]
+  security_groups    = ["default"]
+  eip_bandwidth_size = 2
+  eip_type           = "5_bgp"
+  ssh_ip_version     = "4"
+  ssh_username       = "root"
+}
+
+build {
+  sources = ["source.huaweicloud-ecs.basic-example"]
+
+  provisioner "shell" {
+    inline = [
+      "echo \"start install nginx, sleep 20s first\"",
+      "sleep 20",
+      "echo \"run install\"",
+      "apt install -y nginx",
+      "echo \"enable nginx\"",
+      "systemctl enable nginx.service",
+      "echo \"install nginx done\""
+    ]
+  }
+}
+```
+
+</Tab>
+</Tabs>
