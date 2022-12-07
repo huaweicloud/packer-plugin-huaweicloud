@@ -109,11 +109,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		},
 		&StepRunSourceServer{
 			Name:             b.config.InstanceName,
-			SecurityGroups:   b.config.SecurityGroups,
-			Networks:         b.config.Networks,
-			Ports:            b.config.Ports,
 			VpcID:            b.config.VpcID,
 			Subnets:          b.config.Subnets,
+			SecurityGroups:   b.config.SecurityGroups,
 			UserData:         b.config.UserData,
 			UserDataFile:     b.config.UserDataFile,
 			ConfigDrive:      b.config.ConfigDrive,

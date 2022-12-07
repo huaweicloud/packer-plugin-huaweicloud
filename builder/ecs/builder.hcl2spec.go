@@ -91,11 +91,9 @@ type FlatConfig struct {
 	ReuseIPs                  *bool             `mapstructure:"reuse_ips" required:"false" cty:"reuse_ips" hcl:"reuse_ips"`
 	EIPType                   *string           `mapstructure:"eip_type" required:"false" cty:"eip_type" hcl:"eip_type"`
 	EIPBandwidthSize          *int              `mapstructure:"eip_bandwidth_size" required:"false" cty:"eip_bandwidth_size" hcl:"eip_bandwidth_size"`
-	SecurityGroups            []string          `mapstructure:"security_groups" required:"false" cty:"security_groups" hcl:"security_groups"`
-	Networks                  []string          `mapstructure:"networks" required:"false" cty:"networks" hcl:"networks"`
-	Ports                     []string          `mapstructure:"ports" required:"false" cty:"ports" hcl:"ports"`
 	VpcID                     *string           `mapstructure:"vpc_id" required:"false" cty:"vpc_id" hcl:"vpc_id"`
 	Subnets                   []string          `mapstructure:"subnets" required:"false" cty:"subnets" hcl:"subnets"`
+	SecurityGroups            []string          `mapstructure:"security_groups" required:"false" cty:"security_groups" hcl:"security_groups"`
 	UserData                  *string           `mapstructure:"user_data" required:"false" cty:"user_data" hcl:"user_data"`
 	UserDataFile              *string           `mapstructure:"user_data_file" required:"false" cty:"user_data_file" hcl:"user_data_file"`
 	InstanceName              *string           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
@@ -199,11 +197,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"reuse_ips":                    &hcldec.AttrSpec{Name: "reuse_ips", Type: cty.Bool, Required: false},
 		"eip_type":                     &hcldec.AttrSpec{Name: "eip_type", Type: cty.String, Required: false},
 		"eip_bandwidth_size":           &hcldec.AttrSpec{Name: "eip_bandwidth_size", Type: cty.Number, Required: false},
-		"security_groups":              &hcldec.AttrSpec{Name: "security_groups", Type: cty.List(cty.String), Required: false},
-		"networks":                     &hcldec.AttrSpec{Name: "networks", Type: cty.List(cty.String), Required: false},
-		"ports":                        &hcldec.AttrSpec{Name: "ports", Type: cty.List(cty.String), Required: false},
 		"vpc_id":                       &hcldec.AttrSpec{Name: "vpc_id", Type: cty.String, Required: false},
 		"subnets":                      &hcldec.AttrSpec{Name: "subnets", Type: cty.List(cty.String), Required: false},
+		"security_groups":              &hcldec.AttrSpec{Name: "security_groups", Type: cty.List(cty.String), Required: false},
 		"user_data":                    &hcldec.AttrSpec{Name: "user_data", Type: cty.String, Required: false},
 		"user_data_file":               &hcldec.AttrSpec{Name: "user_data_file", Type: cty.String, Required: false},
 		"instance_name":                &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
