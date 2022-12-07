@@ -97,14 +97,7 @@
   called server properties in some documentation. The strings have a max
   size of 255 bytes each.
 
-- `force_delete` (bool) - Whether to force the HuaweiCloud instance to be forcefully deleted. This
-  is useful for environments that have reclaim / soft deletion enabled. By
-  default this is false.
-
 - `config_drive` (bool) - Whether or not nova should use ConfigDrive for cloud-init metadata.
-
-- `use_blockstorage_volume` (bool) - Use Block Storage service volume for the instance root volume instead of
-  Compute service local volume, this value is always true.
 
 - `volume_name` (string) - Name of the Block Storage service volume. If this isn't specified,
   random string will be used.

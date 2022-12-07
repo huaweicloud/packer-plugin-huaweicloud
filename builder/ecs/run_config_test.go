@@ -68,7 +68,6 @@ func TestRunConfigPrepare_SSHPort(t *testing.T) {
 
 func TestRunConfigPrepare_BlockStorage(t *testing.T) {
 	c := testRunConfig()
-	c.UseBlockStorageVolume = true
 	c.VolumeType = "fast"
 	c.AvailabilityZone = "RegionOne"
 	c.VolumeName = "PackerVolume"

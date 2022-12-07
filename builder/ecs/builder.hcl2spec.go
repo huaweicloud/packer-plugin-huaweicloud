@@ -100,9 +100,7 @@ type FlatConfig struct {
 	UserDataFile              *string           `mapstructure:"user_data_file" required:"false" cty:"user_data_file" hcl:"user_data_file"`
 	InstanceName              *string           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	InstanceMetadata          map[string]string `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata" hcl:"instance_metadata"`
-	ForceDelete               *bool             `mapstructure:"force_delete" required:"false" cty:"force_delete" hcl:"force_delete"`
 	ConfigDrive               *bool             `mapstructure:"config_drive" required:"false" cty:"config_drive" hcl:"config_drive"`
-	UseBlockStorageVolume     *bool             `mapstructure:"use_blockstorage_volume" required:"false" cty:"use_blockstorage_volume" hcl:"use_blockstorage_volume"`
 	VolumeName                *string           `mapstructure:"volume_name" required:"false" cty:"volume_name" hcl:"volume_name"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
@@ -210,9 +208,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"user_data_file":               &hcldec.AttrSpec{Name: "user_data_file", Type: cty.String, Required: false},
 		"instance_name":                &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"instance_metadata":            &hcldec.AttrSpec{Name: "instance_metadata", Type: cty.Map(cty.String), Required: false},
-		"force_delete":                 &hcldec.AttrSpec{Name: "force_delete", Type: cty.Bool, Required: false},
 		"config_drive":                 &hcldec.AttrSpec{Name: "config_drive", Type: cty.Bool, Required: false},
-		"use_blockstorage_volume":      &hcldec.AttrSpec{Name: "use_blockstorage_volume", Type: cty.Bool, Required: false},
 		"volume_name":                  &hcldec.AttrSpec{Name: "volume_name", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},

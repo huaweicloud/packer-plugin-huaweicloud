@@ -15,20 +15,18 @@ import (
 )
 
 type StepRunSourceServer struct {
-	Name                  string
-	SecurityGroups        []string
-	Networks              []string
-	Ports                 []string
-	VpcID                 string
-	Subnets               []string
-	AvailabilityZone      string
-	UserData              string
-	UserDataFile          string
-	ConfigDrive           bool
-	InstanceMetadata      map[string]string
-	UseBlockStorageVolume bool
-	ForceDelete           bool
-	server                *servers.Server
+	Name             string
+	SecurityGroups   []string
+	Networks         []string
+	Ports            []string
+	VpcID            string
+	Subnets          []string
+	AvailabilityZone string
+	UserData         string
+	UserDataFile     string
+	ConfigDrive      bool
+	InstanceMetadata map[string]string
+	server           *servers.Server
 }
 
 func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -77,26 +75,22 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 
 	var serverOptsExt servers.CreateOptsBuilder
 
-	// Create root volume in the Block Storage service if required.
-	// Add block device mapping v2 to the server create options if required.
-	if s.UseBlockStorageVolume {
-		volume := state.Get("volume_id").(string)
-		blockDeviceMappingV2 := []bootfromvolume.BlockDevice{
-			{
-				BootIndex:       0,
-				DestinationType: bootfromvolume.DestinationVolume,
-				SourceType:      bootfromvolume.SourceVolume,
-				UUID:            volume,
-			},
-		}
-		// ImageRef and block device mapping is an invalid options combination.
-		serverOpts.ImageRef = ""
-		serverOptsExt = bootfromvolume.CreateOptsExt{
-			CreateOptsBuilder: &serverOpts, // must pass pointer, because it will be changed later
-			BlockDevice:       blockDeviceMappingV2,
-		}
-	} else {
-		serverOptsExt = &serverOpts // must pass pointer
+	// Create root volume in the Block Storage service,
+	// Add block device mapping v2 to the server create options
+	volume := state.Get("volume_id").(string)
+	blockDeviceMappingV2 := []bootfromvolume.BlockDevice{
+		{
+			BootIndex:       0,
+			DestinationType: bootfromvolume.DestinationVolume,
+			SourceType:      bootfromvolume.SourceVolume,
+			UUID:            volume,
+		},
+	}
+	// ImageRef and block device mapping is an invalid options combination.
+	serverOpts.ImageRef = ""
+	serverOptsExt = bootfromvolume.CreateOptsExt{
+		CreateOptsBuilder: &serverOpts, // must pass pointer, because it will be changed later
+		BlockDevice:       blockDeviceMappingV2,
 	}
 
 	// Add keypair to the server create options.
@@ -137,16 +131,9 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Say(fmt.Sprintf("Terminating the source server: %s ...", s.server.ID))
-	if config.ForceDelete {
-		if err := servers.ForceDelete(computeClient, s.server.ID).ExtractErr(); err != nil {
-			ui.Error(fmt.Sprintf("Error terminating server, may still be around: %s", err))
-			return
-		}
-	} else {
-		if err := servers.Delete(computeClient, s.server.ID).ExtractErr(); err != nil {
-			ui.Error(fmt.Sprintf("Error terminating server, may still be around: %s", err))
-			return
-		}
+	if err := servers.Delete(computeClient, s.server.ID).ExtractErr(); err != nil {
+		ui.Error(fmt.Sprintf("Error terminating server, may still be around: %s", err))
+		return
 	}
 
 	stateChange := ServerStateChangeConf{
