@@ -18,7 +18,6 @@ type StepRunSourceServer struct {
 	Name             string
 	SecurityGroups   []string
 	Networks         []string
-	Ports            []string
 	VpcID            string
 	Subnets          []string
 	AvailabilityZone string
@@ -186,12 +185,7 @@ func (s *StepRunSourceServer) getNetworks(config *Config) ([]servers.Network, er
 		networkIDs[networkID] = true
 	}
 
-	networks := make([]servers.Network, 0, len(networkIDs)+len(s.Ports))
-
-	for _, portID := range s.Ports {
-		networks = append(networks, servers.Network{Port: portID})
-	}
-
+	networks := make([]servers.Network, 0, len(networkIDs))
 	for networkID := range networkIDs {
 		networks = append(networks, servers.Network{UUID: networkID})
 	}

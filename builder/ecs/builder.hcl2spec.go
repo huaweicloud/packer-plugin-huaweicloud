@@ -93,7 +93,6 @@ type FlatConfig struct {
 	EIPBandwidthSize          *int              `mapstructure:"eip_bandwidth_size" required:"false" cty:"eip_bandwidth_size" hcl:"eip_bandwidth_size"`
 	SecurityGroups            []string          `mapstructure:"security_groups" required:"false" cty:"security_groups" hcl:"security_groups"`
 	Networks                  []string          `mapstructure:"networks" required:"false" cty:"networks" hcl:"networks"`
-	Ports                     []string          `mapstructure:"ports" required:"false" cty:"ports" hcl:"ports"`
 	VpcID                     *string           `mapstructure:"vpc_id" required:"false" cty:"vpc_id" hcl:"vpc_id"`
 	Subnets                   []string          `mapstructure:"subnets" required:"false" cty:"subnets" hcl:"subnets"`
 	UserData                  *string           `mapstructure:"user_data" required:"false" cty:"user_data" hcl:"user_data"`
@@ -201,7 +200,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"eip_bandwidth_size":           &hcldec.AttrSpec{Name: "eip_bandwidth_size", Type: cty.Number, Required: false},
 		"security_groups":              &hcldec.AttrSpec{Name: "security_groups", Type: cty.List(cty.String), Required: false},
 		"networks":                     &hcldec.AttrSpec{Name: "networks", Type: cty.List(cty.String), Required: false},
-		"ports":                        &hcldec.AttrSpec{Name: "ports", Type: cty.List(cty.String), Required: false},
 		"vpc_id":                       &hcldec.AttrSpec{Name: "vpc_id", Type: cty.String, Required: false},
 		"subnets":                      &hcldec.AttrSpec{Name: "subnets", Type: cty.List(cty.String), Required: false},
 		"user_data":                    &hcldec.AttrSpec{Name: "user_data", Type: cty.String, Required: false},

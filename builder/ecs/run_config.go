@@ -94,8 +94,6 @@ type RunConfig struct {
 	SecurityGroups []string `mapstructure:"security_groups" required:"false"`
 	// A list of networks by UUID to attach to this instance.
 	Networks []string `mapstructure:"networks" required:"false"`
-	// A list of ports by UUID to attach to this instance.
-	Ports []string `mapstructure:"ports" required:"false"`
 	// A vpc id to attach to this instance.
 	VpcID string `mapstructure:"vpc_id" required:"false"`
 	// A list of subnets by UUID to attach to this instance.
