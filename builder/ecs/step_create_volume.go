@@ -10,7 +10,6 @@ import (
 )
 
 type StepCreateVolume struct {
-	UseBlockStorageVolume  bool
 	VolumeName             string
 	VolumeType             string
 	VolumeAvailabilityZone string
@@ -19,11 +18,6 @@ type StepCreateVolume struct {
 }
 
 func (s *StepCreateVolume) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	// Proceed only if block storage volume is required.
-	if !s.UseBlockStorageVolume {
-		return multistep.ActionContinue
-	}
-
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packer.Ui)
 	sourceImage := state.Get("source_image").(string)

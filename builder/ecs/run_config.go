@@ -122,9 +122,6 @@ type RunConfig struct {
 	ForceDelete bool `mapstructure:"force_delete" required:"false"`
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
-	// Use Block Storage service volume for the instance root volume instead of
-	// Compute service local volume, this value is always true.
-	UseBlockStorageVolume bool `mapstructure:"use_blockstorage_volume" required:"false"`
 	// Name of the Block Storage service volume. If this isn't specified,
 	// random string will be used.
 	VolumeName string `mapstructure:"volume_name" required:"false"`
@@ -229,12 +226,9 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		}
 	}
 
-	c.UseBlockStorageVolume = true
-	if c.UseBlockStorageVolume {
-		// Use random name for the Block Storage volume if it's not provided.
-		if c.VolumeName == "" {
-			c.VolumeName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())
-		}
+	// Use random name for the Block Storage volume if it's not provided.
+	if c.VolumeName == "" {
+		c.VolumeName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())
 	}
 
 	// if neither ID or image name is provided outside the filter, build the
