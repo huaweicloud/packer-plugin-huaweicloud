@@ -90,14 +90,12 @@ type RunConfig struct {
 	EIPType string `mapstructure:"eip_type" required:"false"`
 	// The size of eip bandwidth.
 	EIPBandwidthSize int `mapstructure:"eip_bandwidth_size" required:"false"`
-	// A list of security groups by name to add to this instance.
-	SecurityGroups []string `mapstructure:"security_groups" required:"false"`
-	// A list of networks by UUID to attach to this instance.
-	Networks []string `mapstructure:"networks" required:"false"`
 	// A vpc id to attach to this instance.
 	VpcID string `mapstructure:"vpc_id" required:"false"`
 	// A list of subnets by UUID to attach to this instance.
 	Subnets []string `mapstructure:"subnets" required:"false"`
+	// A list of security groups by name to add to this instance.
+	SecurityGroups []string `mapstructure:"security_groups" required:"false"`
 	// User data to apply when launching the instance. Note that you need to be
 	// careful about escaping characters due to the templates being JSON. It is
 	// often more convenient to use user_data_file, instead. Packer will not

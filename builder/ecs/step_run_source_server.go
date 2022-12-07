@@ -16,10 +16,9 @@ import (
 
 type StepRunSourceServer struct {
 	Name             string
-	SecurityGroups   []string
-	Networks         []string
 	VpcID            string
 	Subnets          []string
+	SecurityGroups   []string
 	AvailabilityZone string
 	UserData         string
 	UserDataFile     string
@@ -173,21 +172,16 @@ func createServer(ui packer.Ui, state multistep.StateBag, client *golangsdk.Serv
 }
 
 func (s *StepRunSourceServer) getNetworks(config *Config) ([]servers.Network, error) {
-	networkIDs := make(map[string]bool)
+	if s.VpcID == "" {
+		return nil, nil
+	}
 
-	if (s.VpcID != "") && (len(s.Subnets) > 0) {
-		for _, subnetID := range s.Subnets {
-			networkIDs[subnetID] = true
+	networks := make([]servers.Network, len(s.Subnets))
+	for i, id := range s.Subnets {
+		networks[i] = servers.Network{
+			UUID: id,
 		}
 	}
 
-	for _, networkID := range s.Networks {
-		networkIDs[networkID] = true
-	}
-
-	networks := make([]servers.Network, 0, len(networkIDs))
-	for networkID := range networkIDs {
-		networks = append(networks, servers.Network{UUID: networkID})
-	}
 	return networks, nil
 }
