@@ -116,10 +116,6 @@ type RunConfig struct {
 	// called server properties in some documentation. The strings have a max
 	// size of 255 bytes each.
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
-	// Whether to force the HuaweiCloud instance to be forcefully deleted. This
-	// is useful for environments that have reclaim / soft deletion enabled. By
-	// default this is false.
-	ForceDelete bool `mapstructure:"force_delete" required:"false"`
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
 	// Name of the Block Storage service volume. If this isn't specified,

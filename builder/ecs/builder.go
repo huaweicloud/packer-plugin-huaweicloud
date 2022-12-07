@@ -118,7 +118,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			UserDataFile:     b.config.UserDataFile,
 			ConfigDrive:      b.config.ConfigDrive,
 			InstanceMetadata: b.config.InstanceMetadata,
-			ForceDelete:      b.config.ForceDelete,
 		},
 		&StepGetPassword{
 			Debug: b.config.PackerDebug,
