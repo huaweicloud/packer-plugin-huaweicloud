@@ -29,7 +29,6 @@ type FlatConfig struct {
 	ImageDescription          *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
 	ImageMembers              []string          `mapstructure:"image_members" required:"false" cty:"image_members" hcl:"image_members"`
 	ImageAutoAcceptMembers    *bool             `mapstructure:"image_auto_accept_members" required:"false" cty:"image_auto_accept_members" hcl:"image_auto_accept_members"`
-	ImageMinDisk              *int              `mapstructure:"image_min_disk" required:"false" cty:"image_min_disk" hcl:"image_min_disk"`
 	ImageTags                 map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags" hcl:"image_tags"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
@@ -135,7 +134,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_description":            &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
 		"image_members":                &hcldec.AttrSpec{Name: "image_members", Type: cty.List(cty.String), Required: false},
 		"image_auto_accept_members":    &hcldec.AttrSpec{Name: "image_auto_accept_members", Type: cty.Bool, Required: false},
-		"image_min_disk":               &hcldec.AttrSpec{Name: "image_min_disk", Type: cty.Number, Required: false},
 		"image_tags":                   &hcldec.AttrSpec{Name: "image_tags", Type: cty.Map(cty.String), Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},

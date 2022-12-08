@@ -22,8 +22,6 @@ type ImageConfig struct {
 	// project. This requires a user with priveleges both in the build project and
 	// in the members provided. Defaults to false.
 	ImageAutoAcceptMembers bool `mapstructure:"image_auto_accept_members" required:"false"`
-	// Minimum disk size needed to boot image, in gigabytes.
-	ImageMinDisk int `mapstructure:"image_min_disk" required:"false"`
 	// The tags of the image in key/pair format.
 	ImageTags map[string]string `mapstructure:"image_tags" required:"false"`
 }
@@ -32,10 +30,6 @@ func (c *ImageConfig) Prepare(ctx *interpolate.Context) []error {
 	errs := make([]error, 0)
 	if c.ImageName == "" {
 		errs = append(errs, fmt.Errorf("image_name must be specified"))
-	}
-
-	if c.ImageMinDisk < 0 {
-		errs = append(errs, fmt.Errorf("An image min disk size must be greater than or equal to 0"))
 	}
 
 	if len(errs) > 0 {
