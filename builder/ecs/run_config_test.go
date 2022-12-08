@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -92,10 +91,9 @@ func TestRunConfigPrepare_BlockStorage(t *testing.T) {
 func TestBuildImageFilter(t *testing.T) {
 
 	filters := ImageFilterOptions{
-		Name:       "Ubuntu 16.04",
+		Name:       "Ubuntu 20.04",
 		Visibility: "public",
 		Owner:      "1234567890",
-		Properties: map[string]string{"os_distro": "ubuntu", "os_version": "16.04"},
 	}
 
 	listOpts, err := filters.Build()
@@ -103,23 +101,27 @@ func TestBuildImageFilter(t *testing.T) {
 		t.Errorf("Building filter failed with: %s", err)
 	}
 
-	if listOpts.Name != "Ubuntu 16.04" {
-		t.Errorf("Name did not build correctly: %s", listOpts.Name)
+	if *listOpts.Name != "Ubuntu 20.04" {
+		t.Errorf("Name did not build correctly: %s", *listOpts.Name)
 	}
 
-	if listOpts.Visibility != images.ImageVisibilityPublic {
-		t.Errorf("Visibility did not build correctly: %s", listOpts.Visibility)
+	if *listOpts.Owner != "1234567890" {
+		t.Errorf("Owner did not build correctly: %s", *listOpts.Owner)
 	}
 
-	if listOpts.Owner != "1234567890" {
-		t.Errorf("Owner did not build correctly: %s", listOpts.Owner)
+	imageType := listOpts.Imagetype.Value()
+	if imageType == "gold" {
+		imageType = "public"
+	}
+	if imageType != "public" {
+		t.Errorf("Visibility did not build correctly: %s", imageType)
 	}
 }
 
 func TestBuildBadImageFilter(t *testing.T) {
 	filterMap := map[string]interface{}{
-		"limit":    "3",
-		"size_min": "25",
+		"limit":   "100",
+		"min_ram": "1024",
 	}
 
 	filters := ImageFilterOptions{}
@@ -131,16 +133,12 @@ func TestBuildBadImageFilter(t *testing.T) {
 		return // we cannot trust listOpts to not cause unexpected behaviour
 	}
 
-	if listOpts.Limit == filterMap["limit"] {
+	if listOpts.Limit != nil && *listOpts.Limit == filterMap["limit"] {
 		t.Errorf("Limit was parsed into ListOpts: %d", listOpts.Limit)
 	}
 
-	if listOpts.SizeMin != 0 {
-		t.Errorf("SizeMin was parsed into ListOpts: %d", listOpts.SizeMin)
-	}
-
-	if listOpts.Sort != "created_at:desc" {
-		t.Errorf("Sort was not applied: %s", listOpts.Sort)
+	if listOpts.MinRam != nil && *listOpts.MinRam != 0 {
+		t.Errorf("MinRam was parsed into ListOpts: %d", *listOpts.MinRam)
 	}
 
 	if !filters.Empty() {
@@ -151,10 +149,9 @@ func TestBuildBadImageFilter(t *testing.T) {
 // Tests that the Empty method on ImageFilterOptions works as expected
 func TestImageFiltersEmpty(t *testing.T) {
 	filledFilters := ImageFilterOptions{
-		Name:       "Ubuntu 16.04",
+		Name:       "Ubuntu 20.04",
 		Visibility: "public",
 		Owner:      "1234567890",
-		Properties: map[string]string{"os_distro": "ubuntu", "os_version": "16.04"},
 	}
 
 	if filledFilters.Empty() {

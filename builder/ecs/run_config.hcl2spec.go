@@ -35,10 +35,9 @@ func (*FlatImageFilter) HCL2Spec() map[string]hcldec.Spec {
 // FlatImageFilterOptions is an auto-generated flat version of ImageFilterOptions.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatImageFilterOptions struct {
-	Name       *string           `mapstructure:"name" cty:"name" hcl:"name"`
-	Owner      *string           `mapstructure:"owner" cty:"owner" hcl:"owner"`
-	Visibility *string           `mapstructure:"visibility" cty:"visibility" hcl:"visibility"`
-	Properties map[string]string `mapstructure:"properties" cty:"properties" hcl:"properties"`
+	Name       *string `mapstructure:"name" cty:"name" hcl:"name"`
+	Owner      *string `mapstructure:"owner" cty:"owner" hcl:"owner"`
+	Visibility *string `mapstructure:"visibility" cty:"visibility" hcl:"visibility"`
 }
 
 // FlatMapstructure returns a new FlatImageFilterOptions.
@@ -56,7 +55,6 @@ func (*FlatImageFilterOptions) HCL2Spec() map[string]hcldec.Spec {
 		"name":       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"owner":      &hcldec.AttrSpec{Name: "owner", Type: cty.String, Required: false},
 		"visibility": &hcldec.AttrSpec{Name: "visibility", Type: cty.String, Required: false},
-		"properties": &hcldec.AttrSpec{Name: "properties", Type: cty.Map(cty.String), Required: false},
 	}
 	return s
 }

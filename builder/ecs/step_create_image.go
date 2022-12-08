@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/ims/v2/cloudimages"
-)
 
-// timeoutCreate means the maximum time in seconds to create the image
-const timeoutCreate int = 900
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
+
+	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
+)
 
 type stepCreateImage struct{}
 
@@ -21,33 +22,39 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	server := state.Get("server").(*servers.Server)
 	ui := state.Get("ui").(packer.Ui)
 
-	// We need the v2 image client
-	imageClient, err := config.imageV2Client()
+	region := config.Region
+	imsClient, err := config.HcImsClient(region)
 	if err != nil {
 		err = fmt.Errorf("Error initializing image service client: %s", err)
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	// Create the image.
+	// Create the image
 	ui.Say(fmt.Sprintf("Creating the image: %s", config.ImageName))
 
-	taglist := []cloudimages.ImageTag{}
+	taglist := make([]model.TagKeyValue, len(config.ImageTags))
+	index := 0
 	for k, v := range config.ImageTags {
-		tag := cloudimages.ImageTag{
+		taglist[index] = model.TagKeyValue{
 			Key:   k,
 			Value: v,
 		}
-		taglist = append(taglist, tag)
+		index++
 	}
-	createOpts := &cloudimages.CreateByServerOpts{
+
+	requestBody := model.CreateImageRequestBody{
 		Name:        config.ImageName,
-		Description: config.ImageDescription,
-		InstanceId:  server.ID,
-		ImageTags:   taglist,
+		Description: &config.ImageDescription,
+		InstanceId:  &server.ID,
+		ImageTags:   &taglist,
 	}
-	log.Printf("[DEBUG] Create image options: %#v", createOpts)
-	v, err := cloudimages.CreateImageByServer(imageClient, createOpts).ExtractJobResponse()
+	request := model.CreateImageRequest{
+		Body: &requestBody,
+	}
+
+	log.Printf("[DEBUG] Create image options: %+v", requestBody)
+	response, err := imsClient.CreateImage(&request)
 	if err != nil {
 		err := fmt.Errorf("Error creating image: %s", err)
 		state.Put("error", err)
@@ -57,7 +64,18 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	// Wait for the image to become available
 	ui.Say(fmt.Sprintf("Waiting for image %s to become available ...", config.ImageName))
-	err = cloudimages.WaitForJobSuccess(imageClient, timeoutCreate, v.JobID)
+	jobID := *response.JobId
+	stateConf := &StateChangeConf{
+		Pending:      []string{"INIT", "RUNNING"},
+		Target:       []string{"SUCCESS"},
+		Refresh:      getImsJobStatus(imsClient, jobID),
+		Timeout:      10 * time.Minute,
+		Delay:        10 * time.Second,
+		PollInterval: 10 * time.Second,
+		StateBag:     state,
+	}
+
+	result, err := stateConf.WaitForState()
 	if err != nil {
 		err := fmt.Errorf("Error waiting for image: %s", err)
 		state.Put("error", err)
@@ -65,16 +83,15 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 
-	entity, err := cloudimages.GetJobEntity(imageClient, v.JobID, "image_id")
-	if err != nil {
+	jobResult := result.(*model.ShowJobResponse)
+	if jobResult.Entities == nil {
 		err := fmt.Errorf("Error extracting image id: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
-	// Set the Image ID in the state
-	imageID := entity.(string)
+	imageID := *jobResult.Entities.ImageId
 	ui.Message(fmt.Sprintf("Image: %s", imageID))
 	state.Put("image", imageID)
 
@@ -83,4 +100,19 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 func (s *stepCreateImage) Cleanup(multistep.StateBag) {
 	// No cleanup...
+}
+
+func getImsJobStatus(client *ims.ImsClient, jobID string) StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		jobRequest := &model.ShowJobRequest{
+			JobId: jobID,
+		}
+		jobResponse, err := client.ShowJob(jobRequest)
+		if err != nil {
+			return nil, "", nil
+		}
+
+		jobStatus := jobResponse.Status.Value()
+		return jobResponse, jobStatus, nil
+	}
 }
