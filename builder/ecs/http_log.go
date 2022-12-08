@@ -74,7 +74,7 @@ func (lrt *LogRoundTripper) logRequest(original io.ReadCloser, contentType strin
 
 	// Handle request contentType
 	if strings.HasPrefix(contentType, "application/json") {
-		debugInfo := lrt.formatJSON(bs.Bytes())
+		debugInfo := formatJSON(bs.Bytes())
 		log.Printf("[DEBUG] HuaweiCloud Request Body: %s", debugInfo)
 	} else {
 		log.Printf("[DEBUG] HuaweiCloud Request Body: %s", bs.String())
@@ -93,7 +93,7 @@ func (lrt *LogRoundTripper) logResponse(original io.ReadCloser, contentType stri
 		if err != nil {
 			return nil, err
 		}
-		debugInfo := lrt.formatJSON(bs.Bytes())
+		debugInfo := formatJSON(bs.Bytes())
 		if debugInfo != "" {
 			log.Printf("[DEBUG] HuaweiCloud Response Body: %s", debugInfo)
 		}
@@ -106,7 +106,7 @@ func (lrt *LogRoundTripper) logResponse(original io.ReadCloser, contentType stri
 
 // formatJSON will try to pretty-format a JSON body.
 // It will also mask known fields which contain sensitive information.
-func (lrt *LogRoundTripper) formatJSON(raw []byte) string {
+func formatJSON(raw []byte) string {
 	var data map[string]interface{}
 
 	err := json.Unmarshal(raw, &data)
@@ -179,4 +179,88 @@ func FormatHeaders(headers http.Header, seperator string) string {
 	sort.Strings(redactedHeaders)
 
 	return strings.Join(redactedHeaders, seperator)
+}
+
+func logRequestHandler(request http.Request) {
+	log.Printf("[DEBUG] API Request URL: %s %s", request.Method, request.URL)
+	log.Printf("[DEBUG] API Request Headers:\n%s", FormatHeaders(request.Header, "\n"))
+	if request.Body != nil {
+		if err := logRequest(request.Body, request.Header.Get("Content-Type")); err != nil {
+			log.Printf("[WARN] failed to get request body: %s", err)
+		}
+	}
+}
+
+func logResponseHandler(response http.Response) {
+	log.Printf("[DEBUG] API Response Code: %d", response.StatusCode)
+	log.Printf("[DEBUG] API Response Headers:\n%s", FormatHeaders(response.Header, "\n"))
+
+	if err := logResponse(response.Body, response.Header.Get("Content-Type")); err != nil {
+		log.Printf("[WARN] failed to get response body: %s", err)
+	}
+}
+
+func logRequest(original io.ReadCloser, contentType string) error {
+	defer original.Close()
+
+	var bs bytes.Buffer
+	_, err := io.Copy(&bs, original)
+	if err != nil {
+		return err
+	}
+
+	body := bs.Bytes()
+	index := findJSONIndex(body)
+	if index == -1 {
+		return nil
+	}
+
+	// Handle request contentType
+	if strings.HasPrefix(contentType, "application/json") {
+		debugInfo := formatJSON(body[index:])
+		log.Printf("[DEBUG] API Request Body: %s", debugInfo)
+	} else {
+		log.Printf("[DEBUG] Not logging because the request body isn't JSON")
+	}
+
+	return nil
+}
+
+// logResponse will log the HTTP Response details.
+// If the body is JSON, it will attempt to be pretty-formatted.
+func logResponse(original io.ReadCloser, contentType string) error {
+	defer original.Close()
+
+	var bs bytes.Buffer
+	_, err := io.Copy(&bs, original)
+	if err != nil {
+		return err
+	}
+
+	body := bs.Bytes()
+	index := findJSONIndex(body)
+	if index == -1 {
+		return nil
+	}
+
+	if strings.HasPrefix(contentType, "application/json") {
+		debugInfo := formatJSON(body[index:])
+		log.Printf("[DEBUG] API Response Body: %s", debugInfo)
+	} else {
+		log.Printf("[DEBUG] Not logging because the response body isn't JSON")
+	}
+
+	return nil
+}
+
+func findJSONIndex(raw []byte) int {
+	var index = -1
+	for i, v := range raw {
+		if v == '{' {
+			index = i
+			break
+		}
+	}
+
+	return index
 }
