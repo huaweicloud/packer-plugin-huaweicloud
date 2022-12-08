@@ -143,7 +143,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepStopServer{},
 		&stepCreateImage{},
 		&stepAddImageMembers{},
-		&stepUpdateImageMinDisk{},
 	}
 
 	// Run!
