@@ -5,13 +5,24 @@ package ecs
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+
 	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack"
-	huaweisdk "github.com/huaweicloud/golangsdk/openstack"
+
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/config"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/httphandler"
+
+	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
+	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
+	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3"
 )
 
 const (
@@ -86,7 +97,7 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 	}
 
 	// initialize the ProviderClient
-	client, err := huaweisdk.NewClient(c.IdentityEndpoint)
+	client, err := openstack.NewClient(c.IdentityEndpoint)
 	if err != nil {
 		return []error{err}
 	}
@@ -102,16 +113,10 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		TLSClientConfig: tlsConfig,
 	}
 
-	var enableLog bool
-	debugEnv := os.Getenv("HW_DEBUG")
-	if debugEnv != "" && debugEnv != "0" {
-		enableLog = true
-	}
-
 	client.HTTPClient = http.Client{
 		Transport: &LogRoundTripper{
 			Rt:    transport,
-			Debug: enableLog,
+			Debug: logEnabled(),
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if client.AKSKAuthOptions.AccessKey != "" {
@@ -129,6 +134,7 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		return []error{err}
 	}
 	c.hwClient = client
+	c.ProjectID = client.ProjectID
 	return nil
 }
 
@@ -141,7 +147,93 @@ func buildClientByAKSK(c *AccessConfig, client *golangsdk.ProviderClient) error 
 		IdentityEndpoint: c.IdentityEndpoint,
 	}
 
-	return huaweisdk.Authenticate(client, ao)
+	return openstack.Authenticate(client, ao)
+}
+
+// NewHcClient is the common client using huaweicloud-sdk-go-v3 package
+func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, error) {
+	endpoint := GetServiceEndpoint(product, region)
+	if endpoint == "" {
+		return nil, fmt.Errorf("failed to get the endpoint of %q service in region %s", product, region)
+	}
+
+	builder := core.NewHcHttpClientBuilder().WithEndpoint(endpoint).WithHttpConfig(buildHTTPConfig(c))
+
+	credentials := basic.Credentials{
+		AK:          c.AccessKey,
+		SK:          c.SecretKey,
+		ProjectId:   c.ProjectID,
+		IamEndpoint: c.IdentityEndpoint,
+	}
+	builder.WithCredential(&credentials)
+
+	return builder.Build(), nil
+}
+
+func buildHTTPConfig(c *AccessConfig) *config.HttpConfig {
+	httpConfig := config.DefaultHttpConfig()
+
+	if c.Insecure {
+		httpConfig = httpConfig.WithIgnoreSSLVerification(true)
+	}
+
+	if logEnabled() {
+		httpHandler := httphandler.NewHttpHandler().
+			AddRequestHandler(logRequestHandler).
+			AddResponseHandler(logResponseHandler)
+		httpConfig = httpConfig.WithHttpHandler(httpHandler)
+	}
+
+	if proxyURL := getProxyFromEnv(); proxyURL != "" {
+		if parsed, err := url.Parse(proxyURL); err == nil {
+			log.Printf("[DEBUG] using https proxy: %s://%s", parsed.Scheme, parsed.Host)
+
+			httpProxy := config.Proxy{
+				Schema:   parsed.Scheme,
+				Host:     parsed.Host,
+				Username: parsed.User.Username(),
+			}
+			if pwd, ok := parsed.User.Password(); ok {
+				httpProxy.Password = pwd
+			}
+
+			httpConfig = httpConfig.WithProxy(&httpProxy)
+		} else {
+			log.Printf("[WARN] parsing https proxy failed: %s", err)
+		}
+	}
+
+	return httpConfig
+}
+
+// HcVpcClient is the VPC service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcVpcClient(region string) (*vpc.VpcClient, error) {
+	hcClient, err := NewHcClient(c, region, "vpc")
+	if err != nil {
+		return nil, err
+	}
+
+	return vpc.NewVpcClient(hcClient), nil
+}
+
+// HcImsClient is the IMS service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcImsClient(region string) (*ims.ImsClient, error) {
+	hcClient, err := NewHcClient(c, region, "ims")
+	if err != nil {
+		return nil, err
+	}
+
+	return ims.NewImsClient(hcClient), nil
+}
+
+// HcEcsClient is the ECS service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcEcsClient(region string) (*ecs.EcsClient, error) {
+	hcClient, err := NewHcClient(c, region, "ecs")
+	if err != nil {
+		return nil, err
+	}
+
+	return ecs.NewEcsClient(hcClient), nil
 }
 
 func (c *AccessConfig) computeV2Client() (*golangsdk.ServiceClient, error) {
@@ -173,7 +265,7 @@ func (c *AccessConfig) networkV2Client() (*golangsdk.ServiceClient, error) {
 }
 
 func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
-	return huaweisdk.NewNetworkV1(c.hwClient, golangsdk.EndpointOpts{
+	return openstack.NewNetworkV1(c.hwClient, golangsdk.EndpointOpts{
 		Region:       c.Region,
 		Availability: c.getEndpointType(),
 	})
@@ -181,4 +273,23 @@ func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
 
 func (c *AccessConfig) getEndpointType() golangsdk.Availability {
 	return golangsdk.AvailabilityPublic
+}
+
+func getProxyFromEnv() string {
+	var url string
+
+	envNames := []string{"HTTPS_PROXY", "https_proxy"}
+	for _, n := range envNames {
+		if val := os.Getenv(n); val != "" {
+			url = val
+			break
+		}
+	}
+
+	return url
+}
+
+func logEnabled() bool {
+	debugEnv := os.Getenv("HW_DEBUG")
+	return debugEnv != "" && debugEnv != "0"
 }
