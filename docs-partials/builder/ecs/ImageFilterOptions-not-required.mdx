@@ -1,11 +1,10 @@
 <!-- Code generated from the comments of the ImageFilterOptions struct in builder/ecs/run_config.go; DO NOT EDIT MANUALLY -->
 
-- `name` (string) - Name
+- `name` (string) - Specifies the image name. Exact matching is used.
 
-- `owner` (string) - Owner
+- `owner` (string) - Specifies the owner to which the image belongs.
 
-- `visibility` (string) - Visibility
-
-- `properties` (map[string]string) - Properties
+- `visibility` (string) - Whether the image is available to other tenants. Available values include:
+  *public*, *private*, *market*, and *shared*.
 
 <!-- End of code generated from the comments of the ImageFilterOptions struct in builder/ecs/run_config.go; -->
