@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/uuid"
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
+
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
 
 // RunConfig contains configuration for running an instance from a source image
@@ -62,7 +63,6 @@ type RunConfig struct {
 	//     -   name (string)
 	//     -   owner (string)
 	//     -   visibility (string)
-	//     -   properties (map of strings to strings)
 	//
 	// -   `most_recent` (boolean) - Selects the newest created image when
 	// true.
@@ -125,7 +125,7 @@ type RunConfig struct {
 	// specified, if use_blockstorage_volume is true.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
 
-	sourceImageOpts images.ListOpts
+	sourceImageOpts *model.ListImagesRequest
 }
 
 type ImageFilter struct {
@@ -138,39 +138,45 @@ type ImageFilter struct {
 }
 
 type ImageFilterOptions struct {
-	Name       string            `mapstructure:"name"`
-	Owner      string            `mapstructure:"owner"`
-	Visibility string            `mapstructure:"visibility"`
-	Properties map[string]string `mapstructure:"properties"`
+	// Specifies the image name. Exact matching is used.
+	Name string `mapstructure:"name"`
+	// Specifies the owner to which the image belongs.
+	Owner string `mapstructure:"owner"`
+	// Whether the image is available to other tenants. Available values include:
+	// *public*, *private*, *market*, and *shared*.
+	Visibility string `mapstructure:"visibility"`
 }
 
 func (f *ImageFilterOptions) Empty() bool {
-	return f.Name == "" && f.Owner == "" && f.Visibility == "" && len(f.Properties) == 0
+	return f.Name == "" && f.Owner == "" && f.Visibility == ""
 }
 
-func (f *ImageFilterOptions) Build() (*images.ListOpts, error) {
-	opts := images.ListOpts{}
-	// Set defaults for status, member_status, and sort
-	opts.Status = images.ImageStatusActive
-	opts.MemberStatus = images.ImageMemberStatusAccepted
-	opts.Sort = "created_at:desc"
-
-	var err error
+func (f *ImageFilterOptions) Build() (*model.ListImagesRequest, error) {
+	// Set defaults for status, sork_key, and sort_dir
+	status := model.GetListImagesRequestStatusEnum().ACTIVE
+	sortKey := model.GetListImagesRequestSortKeyEnum().CREATED_AT
+	sortDir := model.GetListImagesRequestSortDirEnum().DESC
+	opts := model.ListImagesRequest{
+		Status:  &status,
+		SortKey: &sortKey,
+		SortDir: &sortDir,
+	}
 
 	if f.Name != "" {
-		opts.Name = f.Name
+		opts.Name = &f.Name
 	}
 	if f.Owner != "" {
-		opts.Owner = f.Owner
+		opts.Owner = &f.Owner
 	}
 	if f.Visibility != "" {
-		v, err := getImageVisibility(f.Visibility)
-		if err == nil {
-			opts.Visibility = *v
+		v, err := getImageType(f.Visibility)
+		if err != nil {
+			return nil, err
 		}
+		opts.Imagetype = v
 	}
 
-	return &opts, err
+	return &opts, nil
 }
 
 func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
@@ -226,32 +232,41 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 	// if neither ID or image name is provided outside the filter, build the
 	// filter
 	if len(c.SourceImage) == 0 && len(c.SourceImageName) == 0 {
-
 		listOpts, filterErr := c.SourceImageFilters.Filters.Build()
-
 		if filterErr != nil {
 			errs = append(errs, filterErr)
 		}
-		c.sourceImageOpts = *listOpts
+
+		c.sourceImageOpts = listOpts
 	}
 
 	return errs
 }
 
 // Retrieve the specific ImageVisibility using the exported const from images
-func getImageVisibility(visibility string) (*images.ImageVisibility, error) {
-	visibilities := [...]images.ImageVisibility{
-		images.ImageVisibilityPublic,
-		images.ImageVisibilityPrivate,
-		images.ImageVisibilityCommunity,
-		images.ImageVisibilityShared,
-	}
-
-	for _, v := range visibilities {
-		if string(v) == visibility {
-			return &v, nil
+func getImageType(visibility string) (*model.ListImagesRequestImagetype, error) {
+	var isValid bool
+	supportedTypes := []string{"public", "private", "market", "shared"}
+	for _, v := range supportedTypes {
+		if visibility == v {
+			isValid = true
+			break
 		}
 	}
+	if !isValid {
+		return nil, fmt.Errorf("Not a valid visibility: expected to be one of %v, got %s", supportedTypes, visibility)
+	}
 
-	return nil, fmt.Errorf("Not a valid visibility: %s", visibility)
+	// actually, the *visibility* is used as *__imagetype*, we should convert public to gold
+	if visibility == "public" {
+		visibility = "gold"
+	}
+
+	var imageType model.ListImagesRequestImagetype
+	err := imageType.UnmarshalJSON([]byte(visibility))
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing the visibility %s: %s", visibility, err)
+	}
+
+	return &imageType, nil
 }

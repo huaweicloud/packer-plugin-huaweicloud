@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/huaweicloud/golangsdk"
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/images"
+	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
 
 // Artifact is an artifact implementation that contains built images.
@@ -17,7 +17,7 @@ type Artifact struct {
 	BuilderIdValue string
 
 	// IMS client for performing API stuff.
-	Client *golangsdk.ServiceClient
+	Client *ims.ImsClient
 }
 
 func (a *Artifact) BuilderId() string {
@@ -43,5 +43,10 @@ func (a *Artifact) State(name string) interface{} {
 
 func (a *Artifact) Destroy() error {
 	log.Printf("Destroying image: %s", a.ImageId)
-	return images.Delete(a.Client, a.ImageId).ExtractErr()
+
+	request := model.GlanceDeleteImageRequest{
+		ImageId: a.ImageId,
+	}
+	_, err := a.Client.GlanceDeleteImage(&request)
+	return err
 }

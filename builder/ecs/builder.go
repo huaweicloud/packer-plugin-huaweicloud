@@ -72,7 +72,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		return nil, fmt.Errorf("Error initializing compute client: %s", err)
 	}
 
-	imageClient, err := b.config.imageV2Client()
+	region := b.config.Region
+	imsClient, err := b.config.HcImsClient(region)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing image client: %s", err)
 	}
@@ -101,7 +102,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SourceImageName:  b.config.RunConfig.SourceImageName,
 			SourceImageOpts:  b.config.RunConfig.sourceImageOpts,
 			SourceMostRecent: b.config.SourceImageFilters.MostRecent,
-			SourceProperties: b.config.SourceImageFilters.Filters.Properties,
 		},
 		&StepCreateVolume{
 			VolumeName: b.config.VolumeName,
@@ -163,7 +163,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	artifact := &Artifact{
 		ImageId:        state.Get("image").(string),
 		BuilderIdValue: BuilderId,
-		Client:         imageClient,
+		Client:         imsClient,
 	}
 
 	return artifact, nil
