@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/tmp"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 )
 
 type StepKeyPair struct {
@@ -59,32 +60,40 @@ func (s *StepKeyPair) Run(ctx context.Context, state multistep.StateBag) multist
 	}
 
 	config := state.Get("config").(*Config)
-
-	// We need the v2 compute client
-	computeClient, err := config.computeV2Client()
+	region := config.Region
+	ecsClient, err := config.HcEcsClient(region)
 	if err != nil {
 		err = fmt.Errorf("Error initializing compute client: %s", err)
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Creating temporary keypair: %s ...", s.Comm.SSHTemporaryKeyPairName))
-	keypair, err := keypairs.Create(computeClient, keypairs.CreateOpts{
-		Name: s.Comm.SSHTemporaryKeyPairName,
-	}).Extract()
+	kpName := s.Comm.SSHTemporaryKeyPairName
+	ui.Say(fmt.Sprintf("Creating temporary keypair: %s...", kpName))
+
+	keypairbody := &model.NovaCreateKeypairOption{
+		Name: kpName,
+	}
+	request := &model.NovaCreateKeypairRequest{
+		Body: &model.NovaCreateKeypairRequestBody{
+			Keypair: keypairbody,
+		},
+	}
+
+	response, err := ecsClient.NovaCreateKeypair(request)
 	if err != nil {
 		state.Put("error", fmt.Errorf("Error creating temporary keypair: %s", err))
 		return multistep.ActionHalt
 	}
 
-	if len(keypair.PrivateKey) == 0 {
+	if response.Keypair == nil || response.Keypair.PrivateKey == "" {
 		state.Put("error", fmt.Errorf("The temporary keypair returned was blank"))
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Created temporary keypair: %s", s.Comm.SSHTemporaryKeyPairName))
+	ui.Say(fmt.Sprintf("Created temporary keypair: %s", kpName))
 
-	keypair.PrivateKey = string(berToDer([]byte(keypair.PrivateKey), ui))
+	privateKey := string(berToDer([]byte(response.Keypair.PrivateKey), ui))
 
 	// If we're in debug mode, output the private key to the working
 	// directory.
@@ -98,7 +107,7 @@ func (s *StepKeyPair) Run(ctx context.Context, state multistep.StateBag) multist
 		defer f.Close()
 
 		// Write the key out
-		if _, err := f.Write([]byte(keypair.PrivateKey)); err != nil {
+		if _, err := f.Write([]byte(privateKey)); err != nil {
 			state.Put("error", fmt.Errorf("Error saving debug key: %s", err))
 			return multistep.ActionHalt
 		}
@@ -116,8 +125,8 @@ func (s *StepKeyPair) Run(ctx context.Context, state multistep.StateBag) multist
 	s.doCleanup = true
 
 	// Set some state data for use in future steps
-	s.Comm.SSHKeyPairName = s.Comm.SSHTemporaryKeyPairName
-	s.Comm.SSHPrivateKey = []byte(keypair.PrivateKey)
+	s.Comm.SSHKeyPairName = kpName
+	s.Comm.SSHPrivateKey = []byte(privateKey)
 
 	return multistep.ActionContinue
 }
@@ -173,18 +182,23 @@ func (s *StepKeyPair) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packer.Ui)
 
-	// We need the v2 compute client
-	computeClient, err := config.computeV2Client()
+	kpName := s.Comm.SSHTemporaryKeyPairName
+	region := config.Region
+	ecsClient, err := config.HcEcsClient(region)
 	if err != nil {
 		ui.Error(fmt.Sprintf(
-			"Error cleaning up keypair. Please delete the key manually: %s", s.Comm.SSHTemporaryKeyPairName))
+			"Error cleaning up keypair %s. Please delete the key manually: %s", kpName, err))
 		return
 	}
 
-	ui.Say(fmt.Sprintf("Deleting temporary keypair: %s ...", s.Comm.SSHTemporaryKeyPairName))
-	err = keypairs.Delete(computeClient, s.Comm.SSHTemporaryKeyPairName).ExtractErr()
+	ui.Say(fmt.Sprintf("Deleting temporary keypair: %s ...", kpName))
+	request := &model.NovaDeleteKeypairRequest{
+		KeypairName: kpName,
+	}
+
+	_, err = ecsClient.NovaDeleteKeypair(request)
 	if err != nil {
 		ui.Error(fmt.Sprintf(
-			"Error cleaning up keypair. Please delete the key manually: %s", s.Comm.SSHTemporaryKeyPairName))
+			"Error cleaning up keypair %s. Please delete the key manually: %s", kpName, err))
 	}
 }

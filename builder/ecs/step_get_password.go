@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"log"
 	"time"
@@ -10,8 +9,8 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"golang.org/x/crypto/ssh"
+
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 )
 
 // StepGetPassword reads the password from a booted HuaweiCloud server and sets
@@ -38,8 +37,8 @@ func (s *StepGetPassword) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionContinue
 	}
 
-	// We need the v2 compute client
-	computeClient, err := config.computeV2Client()
+	region := config.Region
+	ecsClient, err := config.HcEcsClient(region)
 	if err != nil {
 		err = fmt.Errorf("Error initializing compute client: %s", err)
 		state.Put("error", err)
@@ -47,18 +46,22 @@ func (s *StepGetPassword) Run(ctx context.Context, state multistep.StateBag) mul
 	}
 
 	ui.Say("Waiting for password since WinRM password is not set...")
-	server := state.Get("server").(*servers.Server)
+	serverID := state.Get("server_id").(string)
+
 	var password string
+	for password == "" {
 
-	privateKey, err := ssh.ParseRawPrivateKey(s.Comm.SSHPrivateKey)
-	if err != nil {
-		err = fmt.Errorf("Error parsing private key: %s", err)
-		state.Put("error", err)
-		return multistep.ActionHalt
-	}
+		request := &model.ShowServerPasswordRequest{
+			ServerId: serverID,
+		}
+		response, err := ecsClient.ShowServerPassword(request)
+		if err != nil {
+			err = fmt.Errorf("Error initializing compute client: %s", err)
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
 
-	for ; password == "" && err == nil; password, err = servers.GetPassword(computeClient, server.ID).ExtractPassword(privateKey.(*rsa.PrivateKey)) {
-
+		password = *response.Password
 		// Check for an interrupt in between attempts.
 		if _, ok := state.GetOk(multistep.StateCancelled); ok {
 			return multistep.ActionHalt
