@@ -22,7 +22,7 @@ import (
 
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
-	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3"
+	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2"
 )
 
 const (
