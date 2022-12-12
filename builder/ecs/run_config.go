@@ -18,15 +18,8 @@ import (
 // and details on how to access that launched image.
 type RunConfig struct {
 	Comm communicator.Config `mapstructure:",squash"`
-	// The type of interface to connect via SSH, valid values are "public"
-	// and "private", and the default behavior is to connect via
-	// whichever is returned first from the HuaweiCloud API.
-	SSHInterface string `mapstructure:"ssh_interface" required:"false"`
-	// The IP version to use for SSH connections, valid values are `4` and `6`.
-	// Useful on dual stacked instances where the default behavior is to
-	// connect via whichever IP address is returned first from the HuaweiCloud
-	// API.
-	SSHIPVersion string `mapstructure:"ssh_ip_version" required:"false"`
+	// The ID or name for the desired flavor for the server to be created.
+	Flavor string `mapstructure:"flavor" required:"true"`
 	// The ID of the base image to use. This is the image that will
 	// be used to launch a new server and provision it. Unless you specify
 	// completely custom SSH settings, the source image must have cloud-init
@@ -72,8 +65,6 @@ type RunConfig struct {
 	// is provided alongside `source_image`, the `source_image` will override
 	// the filter. The filter will not be used in this case.
 	SourceImageFilters ImageFilter `mapstructure:"source_image_filter" required:"false"`
-	// The ID or name for the desired flavor for the server to be created.
-	Flavor string `mapstructure:"flavor" required:"true"`
 	// The availability zone to launch the server in.
 	// If omitted, a random availability zone in the region will be used.
 	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
@@ -90,6 +81,8 @@ type RunConfig struct {
 	EIPType string `mapstructure:"eip_type" required:"false"`
 	// The size of eip bandwidth.
 	EIPBandwidthSize int `mapstructure:"eip_bandwidth_size" required:"false"`
+	// The IP version to use for SSH connections, valid values are `4` and `6`.
+	SSHIPVersion string `mapstructure:"ssh_ip_version" required:"false"`
 	// A vpc id to attach to this instance.
 	VpcID string `mapstructure:"vpc_id" required:"false"`
 	// A list of subnets by UUID to attach to this instance.
