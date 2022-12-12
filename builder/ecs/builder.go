@@ -67,11 +67,6 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	computeClient, err := b.config.computeV2Client()
-	if err != nil {
-		return nil, fmt.Errorf("Error initializing compute client: %s", err)
-	}
-
 	region := b.config.Region
 	imsClient, err := b.config.HcImsClient(region)
 	if err != nil {
@@ -133,12 +128,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			EIPBandwidthSize: b.config.EIPBandwidthSize,
 		},
 		&communicator.StepConnect{
-			Config: &b.config.RunConfig.Comm,
-			Host: CommHost(
-				b.config.RunConfig.Comm.SSHHost,
-				computeClient,
-				b.config.SSHInterface,
-				b.config.SSHIPVersion),
+			Config:    &b.config.RunConfig.Comm,
+			Host:      CommHost(b.config.RunConfig.Comm.SSHHost),
 			SSHConfig: b.config.RunConfig.Comm.SSHConfigFunc(),
 		},
 		&commonsteps.StepProvision{},

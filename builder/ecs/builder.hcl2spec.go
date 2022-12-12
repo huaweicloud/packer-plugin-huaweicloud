@@ -79,17 +79,16 @@ type FlatConfig struct {
 	WinRMUseSSL               *bool             `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure             *bool             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	SSHInterface              *string           `mapstructure:"ssh_interface" required:"false" cty:"ssh_interface" hcl:"ssh_interface"`
-	SSHIPVersion              *string           `mapstructure:"ssh_ip_version" required:"false" cty:"ssh_ip_version" hcl:"ssh_ip_version"`
+	Flavor                    *string           `mapstructure:"flavor" required:"true" cty:"flavor" hcl:"flavor"`
 	SourceImage               *string           `mapstructure:"source_image" required:"false" cty:"source_image" hcl:"source_image"`
 	SourceImageName           *string           `mapstructure:"source_image_name" required:"false" cty:"source_image_name" hcl:"source_image_name"`
 	SourceImageFilters        *FlatImageFilter  `mapstructure:"source_image_filter" required:"false" cty:"source_image_filter" hcl:"source_image_filter"`
-	Flavor                    *string           `mapstructure:"flavor" required:"true" cty:"flavor" hcl:"flavor"`
 	AvailabilityZone          *string           `mapstructure:"availability_zone" required:"false" cty:"availability_zone" hcl:"availability_zone"`
 	FloatingIP                *string           `mapstructure:"floating_ip" required:"false" cty:"floating_ip" hcl:"floating_ip"`
 	ReuseIPs                  *bool             `mapstructure:"reuse_ips" required:"false" cty:"reuse_ips" hcl:"reuse_ips"`
 	EIPType                   *string           `mapstructure:"eip_type" required:"false" cty:"eip_type" hcl:"eip_type"`
 	EIPBandwidthSize          *int              `mapstructure:"eip_bandwidth_size" required:"false" cty:"eip_bandwidth_size" hcl:"eip_bandwidth_size"`
+	SSHIPVersion              *string           `mapstructure:"ssh_ip_version" required:"false" cty:"ssh_ip_version" hcl:"ssh_ip_version"`
 	VpcID                     *string           `mapstructure:"vpc_id" required:"false" cty:"vpc_id" hcl:"vpc_id"`
 	Subnets                   []string          `mapstructure:"subnets" required:"false" cty:"subnets" hcl:"subnets"`
 	SecurityGroups            []string          `mapstructure:"security_groups" required:"false" cty:"security_groups" hcl:"security_groups"`
@@ -184,17 +183,16 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ssl":                &hcldec.AttrSpec{Name: "winrm_use_ssl", Type: cty.Bool, Required: false},
 		"winrm_insecure":               &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":               &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
-		"ssh_interface":                &hcldec.AttrSpec{Name: "ssh_interface", Type: cty.String, Required: false},
-		"ssh_ip_version":               &hcldec.AttrSpec{Name: "ssh_ip_version", Type: cty.String, Required: false},
+		"flavor":                       &hcldec.AttrSpec{Name: "flavor", Type: cty.String, Required: false},
 		"source_image":                 &hcldec.AttrSpec{Name: "source_image", Type: cty.String, Required: false},
 		"source_image_name":            &hcldec.AttrSpec{Name: "source_image_name", Type: cty.String, Required: false},
 		"source_image_filter":          &hcldec.BlockSpec{TypeName: "source_image_filter", Nested: hcldec.ObjectSpec((*FlatImageFilter)(nil).HCL2Spec())},
-		"flavor":                       &hcldec.AttrSpec{Name: "flavor", Type: cty.String, Required: false},
 		"availability_zone":            &hcldec.AttrSpec{Name: "availability_zone", Type: cty.String, Required: false},
 		"floating_ip":                  &hcldec.AttrSpec{Name: "floating_ip", Type: cty.String, Required: false},
 		"reuse_ips":                    &hcldec.AttrSpec{Name: "reuse_ips", Type: cty.Bool, Required: false},
 		"eip_type":                     &hcldec.AttrSpec{Name: "eip_type", Type: cty.String, Required: false},
 		"eip_bandwidth_size":           &hcldec.AttrSpec{Name: "eip_bandwidth_size", Type: cty.Number, Required: false},
+		"ssh_ip_version":               &hcldec.AttrSpec{Name: "ssh_ip_version", Type: cty.String, Required: false},
 		"vpc_id":                       &hcldec.AttrSpec{Name: "vpc_id", Type: cty.String, Required: false},
 		"subnets":                      &hcldec.AttrSpec{Name: "subnets", Type: cty.List(cty.String), Required: false},
 		"security_groups":              &hcldec.AttrSpec{Name: "security_groups", Type: cty.List(cty.String), Required: false},

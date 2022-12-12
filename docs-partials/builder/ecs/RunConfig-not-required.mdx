@@ -1,14 +1,5 @@
 <!-- Code generated from the comments of the RunConfig struct in builder/ecs/run_config.go; DO NOT EDIT MANUALLY -->
 
-- `ssh_interface` (string) - The type of interface to connect via SSH, valid values are "public"
-  and "private", and the default behavior is to connect via
-  whichever is returned first from the HuaweiCloud API.
-
-- `ssh_ip_version` (string) - The IP version to use for SSH connections, valid values are `4` and `6`.
-  Useful on dual stacked instances where the default behavior is to
-  connect via whichever IP address is returned first from the HuaweiCloud
-  API.
-
 - `source_image` (string) - The ID of the base image to use. This is the image that will
   be used to launch a new server and provision it. Unless you specify
   completely custom SSH settings, the source image must have cloud-init
@@ -69,6 +60,8 @@
 - `eip_type` (string) - The type of eip. See the api doc to get the value.
 
 - `eip_bandwidth_size` (int) - The size of eip bandwidth.
+
+- `ssh_ip_version` (string) - The IP version to use for SSH connections, valid values are `4` and `6`.
 
 - `vpc_id` (string) - A vpc id to attach to this instance.
 

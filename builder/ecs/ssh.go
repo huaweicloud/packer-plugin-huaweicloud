@@ -2,80 +2,44 @@ package ecs
 
 import (
 	"errors"
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 )
 
 // CommHost looks up the host for the communicator.
-func CommHost(
-	host string,
-	client *golangsdk.ServiceClient,
-	sshinterface string,
-	sshipversion string) func(multistep.StateBag) (string, error) {
+func CommHost(host string) func(multistep.StateBag) (string, error) {
 	return func(state multistep.StateBag) (string, error) {
 		if host != "" {
 			log.Printf("Using ssh_host value: %s", host)
 			return host, nil
 		}
 
-		s := state.Get("server").(*servers.Server)
-
-		// If we have a specific interface, try that
-		if sshinterface != "" {
-			if addr := sshAddrFromPool(s, sshinterface, sshipversion); addr != "" {
-				log.Printf("[DEBUG] Using IP address %s from specified interface %s to connect", addr, sshinterface)
-				return addr, nil
-			}
-		}
-
-		// If we have a floating IP, use that
+		// if we have a floating IP, use that
 		ip := state.Get("access_ip").(*floatingips.FloatingIP)
 		if ip != nil && ip.FloatingIP != "" {
 			log.Printf("[DEBUG] Using floating IP %s to connect", ip.FloatingIP)
 			return ip.FloatingIP, nil
 		}
 
-		if s.AccessIPv4 != "" {
-			log.Printf("[DEBUG] Using AccessIPv4 %s to connect", s.AccessIPv4)
-			return s.AccessIPv4, nil
-		}
-
-		// Try to get it from the requested interface
-		if addr := sshAddrFromPool(s, sshinterface, sshipversion); addr != "" {
+		// try to get it from the requested interface
+		if addr := getSshAddrFromPool(state); addr != "" {
 			log.Printf("[DEBUG] Using IP address %s to connect", addr)
 			return addr, nil
 		}
-
-		s, err := servers.Get(client, s.ID).Extract()
-		if err != nil {
-			return "", err
-		}
-
-		state.Put("server", s)
-		time.Sleep(1 * time.Second)
 
 		return "", errors.New("couldn't determine IP address for server")
 	}
 }
 
-func sshAddrFromPool(s *servers.Server, desired string, sshIPVersion string) string {
-	// Get all the addresses associated with this server. This
-	// was taken directly from Terraform.
-	for pool, networkAddresses := range s.Addresses {
-		// If we have an SSH interface specified, skip it if no match
-		if desired != "" && pool != desired {
-			log.Printf(
-				"[INFO] Skipping pool %s, doesn't match requested %s",
-				pool, desired)
-			continue
-		}
+func getSshAddrFromPool(state multistep.StateBag) string {
+	s := state.Get("server").(*servers.Server)
+	var addr string
 
+	// Get all the addresses associated with this server.
+	for _, networkAddresses := range s.Addresses {
 		elements, ok := networkAddresses.([]interface{})
 		if !ok {
 			log.Printf(
@@ -85,24 +49,9 @@ func sshAddrFromPool(s *servers.Server, desired string, sshIPVersion string) str
 		}
 
 		for _, element := range elements {
-			var addr string
-			address := element.(map[string]interface{})
-			if address["OS-EXT-IPS:type"] == "floating" {
-				addr = address["addr"].(string)
-			} else if sshIPVersion == "4" {
-				if address["version"].(float64) == 4 {
-					addr = address["addr"].(string)
-				}
-			} else if sshIPVersion == "6" {
-				if address["version"].(float64) == 6 {
-					addr = fmt.Sprintf("[%s]", address["addr"].(string))
-				}
-			} else {
-				if address["version"].(float64) == 6 {
-					addr = fmt.Sprintf("[%s]", address["addr"].(string))
-				} else {
-					addr = address["addr"].(string)
-				}
+			nic := element.(map[string]interface{})
+			if v, ok := nic["addr"]; ok {
+				addr = v.(string)
 			}
 
 			if addr != "" {
