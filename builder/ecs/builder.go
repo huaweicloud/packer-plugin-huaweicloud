@@ -103,6 +103,11 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SourceImageOpts:  b.config.RunConfig.sourceImageOpts,
 			SourceMostRecent: b.config.SourceImageFilters.MostRecent,
 		},
+		&StepCreateNetwork{
+			VpcID:          b.config.VpcID,
+			Subnets:        b.config.Subnets,
+			SecurityGroups: b.config.SecurityGroups,
+		},
 		&StepCreateVolume{
 			VolumeName: b.config.VolumeName,
 			VolumeType: b.config.VolumeType,

@@ -41,7 +41,7 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		return multistep.ActionHalt
 	}
 
-	networks, err := s.getNetworks(config)
+	networks, err := s.getNetworks(state)
 	if err != nil {
 		state.Put("error", err)
 		return multistep.ActionHalt
@@ -171,13 +171,15 @@ func createServer(ui packer.Ui, state multistep.StateBag, client *golangsdk.Serv
 	return latestServer.(*servers.Server), nil
 }
 
-func (s *StepRunSourceServer) getNetworks(config *Config) ([]servers.Network, error) {
-	if s.VpcID == "" {
+func (s *StepRunSourceServer) getNetworks(state multistep.StateBag) ([]servers.Network, error) {
+	vpcID := state.Get("vpc_id").(string)
+	if vpcID == "" {
 		return nil, nil
 	}
 
-	networks := make([]servers.Network, len(s.Subnets))
-	for i, id := range s.Subnets {
+	subnets := state.Get("subnets").([]string)
+	networks := make([]servers.Network, len(subnets))
+	for i, id := range subnets {
 		networks[i] = servers.Network{
 			UUID: id,
 		}
