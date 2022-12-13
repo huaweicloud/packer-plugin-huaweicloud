@@ -103,6 +103,12 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Subnets:        b.config.Subnets,
 			SecurityGroups: b.config.SecurityGroups,
 		},
+		&StepCreatePublicipIP{
+			PublicipIP:       b.config.FloatingIP,
+			ReuseIPs:         b.config.ReuseIPs,
+			EIPType:          b.config.EIPType,
+			EIPBandwidthSize: b.config.EIPBandwidthSize,
+		},
 		&StepCreateVolume{
 			VolumeName: b.config.VolumeName,
 			VolumeType: b.config.VolumeType,
@@ -117,15 +123,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			ConfigDrive:      b.config.ConfigDrive,
 			InstanceMetadata: b.config.InstanceMetadata,
 		},
+		&StepAssociatePublicipIP{},
 		&StepGetPassword{
 			Debug: b.config.PackerDebug,
 			Comm:  &b.config.RunConfig.Comm,
-		},
-		&StepAllocateIp{
-			FloatingIP:       b.config.FloatingIP,
-			ReuseIPs:         b.config.ReuseIPs,
-			EIPType:          b.config.EIPType,
-			EIPBandwidthSize: b.config.EIPBandwidthSize,
 		},
 		&communicator.StepConnect{
 			Config:    &b.config.RunConfig.Comm,

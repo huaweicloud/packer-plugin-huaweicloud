@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/networking/v2/extensions/layer3/floatingips"
 )
 
 // CommHost looks up the host for the communicator.
@@ -18,10 +17,10 @@ func CommHost(host string) func(multistep.StateBag) (string, error) {
 		}
 
 		// if we have a floating IP, use that
-		ip := state.Get("access_ip").(*floatingips.FloatingIP)
-		if ip != nil && ip.FloatingIP != "" {
-			log.Printf("[DEBUG] Using floating IP %s to connect", ip.FloatingIP)
-			return ip.FloatingIP, nil
+		publicIP := state.Get("access_eip").(*PublicipIP)
+		if publicIP != nil && publicIP.Address != "" {
+			log.Printf("[DEBUG] Using floating IP %s to connect", publicIP.Address)
+			return publicIP.Address, nil
 		}
 
 		// try to get it from the requested interface

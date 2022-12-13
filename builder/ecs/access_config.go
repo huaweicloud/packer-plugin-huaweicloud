@@ -21,6 +21,7 @@ import (
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/httphandler"
 
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
+	eip "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v2"
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
 	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2"
 )
@@ -206,16 +207,6 @@ func buildHTTPConfig(c *AccessConfig) *config.HttpConfig {
 	return httpConfig
 }
 
-// HcVpcClient is the VPC service client using huaweicloud-sdk-go-v3 package
-func (c *AccessConfig) HcVpcClient(region string) (*vpc.VpcClient, error) {
-	hcClient, err := NewHcClient(c, region, "vpc")
-	if err != nil {
-		return nil, err
-	}
-
-	return vpc.NewVpcClient(hcClient), nil
-}
-
 // HcImsClient is the IMS service client using huaweicloud-sdk-go-v3 package
 func (c *AccessConfig) HcImsClient(region string) (*ims.ImsClient, error) {
 	hcClient, err := NewHcClient(c, region, "ims")
@@ -234,6 +225,26 @@ func (c *AccessConfig) HcEcsClient(region string) (*ecs.EcsClient, error) {
 	}
 
 	return ecs.NewEcsClient(hcClient), nil
+}
+
+// HcVpcClient is the VPC service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcVpcClient(region string) (*vpc.VpcClient, error) {
+	hcClient, err := NewHcClient(c, region, "vpc")
+	if err != nil {
+		return nil, err
+	}
+
+	return vpc.NewVpcClient(hcClient), nil
+}
+
+// HcEipClient is the EIP service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
+	hcClient, err := NewHcClient(c, region, "vpc")
+	if err != nil {
+		return nil, err
+	}
+
+	return eip.NewEipClient(hcClient), nil
 }
 
 func (c *AccessConfig) computeV2Client() (*golangsdk.ServiceClient, error) {
