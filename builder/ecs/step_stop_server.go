@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/huaweicloud/golangsdk"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
+
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 )
 
 type StepStopServer struct{}
@@ -17,44 +17,52 @@ type StepStopServer struct{}
 func (s *StepStopServer) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
-	server := state.Get("server").(*servers.Server)
 
-	// We need the v2 compute client
-	client, err := config.computeV2Client()
+	region := config.Region
+	client, err := config.HcEcsClient(region)
 	if err != nil {
 		err = fmt.Errorf("Error initializing compute client: %s", err)
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Stopping server: %s ...", server.ID))
-	if err := startstop.Stop(client, server.ID).ExtractErr(); err != nil {
-		if errCode, ok := err.(golangsdk.ErrUnexpectedResponseCode); ok {
-			if errCode.Actual == 409 {
-				// The server might have already been shut down by Windows Sysprep
-				log.Printf("[WARN] 409 on stopping an already stopped server, continuing")
-				return multistep.ActionContinue
-			}
-		}
+	serverID := state.Get("server_id").(string)
+	ui.Say(fmt.Sprintf("Stopping server: %s ...", serverID))
 
-		err = fmt.Errorf("Error stopping server: %s", err)
-		state.Put("error", err)
-		return multistep.ActionHalt
+	stopBody := &model.BatchStopServersOption{
+		Servers: []model.ServerId{
+			{
+				Id: serverID,
+			},
+		},
 	}
 
-	ui.Message(fmt.Sprintf("Waiting for server to stop: %s ...", server.ID))
-	stateChange := ServerStateChangeConf{
-		Pending:   []string{"ACTIVE"},
-		Target:    []string{"SHUTOFF", "STOPPED"},
-		Refresh:   ServerStateRefreshFunc(client, server.ID),
-		StepState: state,
+	request := &model.BatchStopServersRequest{
+		Body: &model.BatchStopServersRequestBody{
+			OsStop: stopBody,
+		},
+	}
+
+	if _, err := client.BatchStopServers(request); err != nil {
+		// we can make an image when the server is running or not, continue
+		log.Printf("[WARN] failed to stop server: %s", err)
+		return multistep.ActionContinue
+	}
+
+	ui.Message(fmt.Sprintf("Waiting for server to stop: %s ...", serverID))
+	stateChange := StateChangeConf{
+		Pending:      []string{"ACTIVE"},
+		Target:       []string{"SHUTOFF", "STOPPED"},
+		Refresh:      serverStateRefreshFunc(client, serverID),
+		Timeout:      3 * time.Minute,
+		Delay:        5 * time.Second,
+		PollInterval: 5 * time.Second,
+		StateBag:     state,
 	}
 	if _, err := stateChange.WaitForState(); err != nil {
-		err := fmt.Errorf("Error waiting for server (%s) to stop: %s", server.ID, err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
+		log.Printf("[WARN] error waiting for server (%s) to stop: %s", serverID, err)
 	}
+
 	return multistep.ActionContinue
 }
 

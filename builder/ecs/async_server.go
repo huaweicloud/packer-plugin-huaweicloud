@@ -1,80 +1,58 @@
 package ecs
 
 import (
-	"errors"
-	"fmt"
 	"log"
-	"time"
+	"net/http"
 
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/huaweicloud/golangsdk"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/sdkerr"
+	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 )
 
-// ServerStateChangeConf is the configuration struct used for `WaitForState`.
-type ServerStateChangeConf struct {
-	Pending   []string
-	Refresh   StateRefreshFunc
-	StepState multistep.StateBag
-	Target    []string
-}
-
-// ServerStateRefreshFunc returns a StateRefreshFunc that is used to watch
-// an HuaweiCloud server.
-func ServerStateRefreshFunc(
-	client *golangsdk.ServiceClient, serverID string) StateRefreshFunc {
+// serverStateRefreshFunc returns a StateRefreshFunc that is used to watch an ECS server.
+func serverStateRefreshFunc(client *ecs.EcsClient, serverID string) StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		serverNew, err := servers.Get(client, serverID).Extract()
+		request := &model.ShowServerRequest{
+			ServerId: serverID,
+		}
+
+		response, err := client.ShowServer(request)
 		if err != nil {
-			if _, ok := err.(golangsdk.ErrDefault404); ok {
+			var statusCode int
+			if responseErr, ok := err.(*sdkerr.ServiceResponseError); ok {
+				statusCode = responseErr.StatusCode
+			} else {
+				return nil, "ERROR", err
+			}
+
+			if statusCode == http.StatusNotFound {
 				log.Printf("[INFO] 404 on ServerStateRefresh, returning DELETED")
 				return nil, "DELETED", nil
 			}
+
 			log.Printf("[ERROR] Error on ServerStateRefresh: %s", err)
 			return nil, "", err
 		}
 
+		serverNew := response.Server
 		return serverNew, serverNew.Status, nil
 	}
 }
 
-// WaitForState watches an object and waits for it to achieve a certain
-// state.
-func (conf *ServerStateChangeConf) WaitForState() (i interface{}, err error) {
-	log.Printf("Waiting for state to become: %s", conf.Target)
+// serverJobStateRefreshFunc returns a StateRefreshFunc that is used to watch an ECS job.
+func serverJobStateRefreshFunc(client *ecs.EcsClient, jobID string) StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		request := &model.ShowJobRequest{
+			JobId: jobID,
+		}
 
-	for {
-		var currentState string
-		i, currentState, err = conf.Refresh()
+		response, err := client.ShowJob(request)
 		if err != nil {
-			return
+			log.Printf("[ERROR] Error on ServerJobStateRefresh: %s", err)
+			return nil, "", err
 		}
 
-		for _, t := range conf.Target {
-			if currentState == t {
-				return
-			}
-		}
-
-		if conf.StepState != nil {
-			if _, ok := conf.StepState.GetOk(multistep.StateCancelled); ok {
-				return nil, errors.New("interrupted")
-			}
-		}
-
-		found := false
-		for _, allowed := range conf.Pending {
-			if currentState == allowed {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			return nil, fmt.Errorf("unexpected state '%s', wanted target '%s'", currentState, conf.Target)
-		}
-
-		log.Printf("Waiting for state to become: %s, currently: %s", conf.Target, currentState)
-		time.Sleep(2 * time.Second)
+		status := response.Status.Value()
+		return response, status, nil
 	}
 }
