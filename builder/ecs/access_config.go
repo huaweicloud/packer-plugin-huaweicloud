@@ -3,17 +3,12 @@
 package ecs
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-
-	"github.com/huaweicloud/golangsdk"
-	"github.com/huaweicloud/golangsdk/openstack"
 
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
@@ -60,8 +55,6 @@ type AccessConfig struct {
 	// Trust self-signed SSL certificates.
 	// By default this is false.
 	Insecure bool `mapstructure:"insecure" required:"false"`
-
-	hwClient *golangsdk.ProviderClient
 }
 
 func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
@@ -100,45 +93,6 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		c.IdentityEndpoint = DefaultAuthURL
 	}
 
-	// initialize the ProviderClient
-	client, err := openstack.NewClient(c.IdentityEndpoint)
-	if err != nil {
-		return []error{err}
-	}
-
-	// Set UserAgent
-	client.UserAgent.Prepend(UserAgent)
-
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: c.Insecure,
-	}
-	transport := &http.Transport{
-		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: tlsConfig,
-	}
-
-	client.HTTPClient = http.Client{
-		Transport: &LogRoundTripper{
-			Rt:    transport,
-			Debug: logEnabled(),
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if client.AKSKAuthOptions.AccessKey != "" {
-				golangsdk.ReSign(req, golangsdk.SignOptions{
-					AccessKey: client.AKSKAuthOptions.AccessKey,
-					SecretKey: client.AKSKAuthOptions.SecretKey,
-				})
-			}
-			return nil
-		},
-	}
-
-	err = buildClientByAKSK(c, client)
-	if err != nil {
-		return []error{err}
-	}
-	c.hwClient = client
-
 	if c.ProjectID == "" {
 		projectID, err := c.getProjectID(c.ProjectName)
 		if err != nil {
@@ -149,18 +103,6 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 	}
 
 	return nil
-}
-
-func buildClientByAKSK(c *AccessConfig, client *golangsdk.ProviderClient) error {
-	ao := golangsdk.AKSKAuthOptions{
-		AccessKey:        c.AccessKey,
-		SecretKey:        c.SecretKey,
-		ProjectName:      c.ProjectName,
-		ProjectId:        c.ProjectID,
-		IdentityEndpoint: c.IdentityEndpoint,
-	}
-
-	return openstack.Authenticate(client, ao)
 }
 
 // NewHcClient is the common client using huaweicloud-sdk-go-v3 package
@@ -261,45 +203,6 @@ func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
 	}
 
 	return eip.NewEipClient(hcClient), nil
-}
-
-func (c *AccessConfig) computeV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewComputeV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
-
-func (c *AccessConfig) imageV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewImageServiceV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
-
-func (c *AccessConfig) blockStorageV3Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewBlockStorageV3(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
-
-func (c *AccessConfig) networkV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewNetworkV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
-
-func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
-	return openstack.NewNetworkV1(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
-
-func (c *AccessConfig) getEndpointType() golangsdk.Availability {
-	return golangsdk.AvailabilityPublic
 }
 
 func (c *AccessConfig) getProjectID(region string) (string, error) {
