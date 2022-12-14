@@ -17,11 +17,14 @@ import (
 
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/config"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/httphandler"
 
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
 	eip "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v2"
+	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
 	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2"
 )
@@ -135,7 +138,16 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		return []error{err}
 	}
 	c.hwClient = client
-	c.ProjectID = client.ProjectID
+
+	if c.ProjectID == "" {
+		projectID, err := c.getProjectID(c.ProjectName)
+		if err != nil {
+			return []error{err}
+		}
+
+		c.ProjectID = projectID
+	}
+
 	return nil
 }
 
@@ -166,10 +178,9 @@ func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, e
 	builder := core.NewHcHttpClientBuilder().WithEndpoint(endpoint).WithHttpConfig(buildHTTPConfig(c))
 
 	credentials := basic.Credentials{
-		AK:          c.AccessKey,
-		SK:          c.SecretKey,
-		ProjectId:   c.ProjectID,
-		IamEndpoint: c.IdentityEndpoint,
+		AK:        c.AccessKey,
+		SK:        c.SecretKey,
+		ProjectId: c.ProjectID,
 	}
 	builder.WithCredential(&credentials)
 
@@ -289,6 +300,33 @@ func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
 
 func (c *AccessConfig) getEndpointType() golangsdk.Availability {
 	return golangsdk.AvailabilityPublic
+}
+
+func (c *AccessConfig) getProjectID(region string) (string, error) {
+	builder := core.NewHcHttpClientBuilder().WithEndpoint(c.IdentityEndpoint).WithHttpConfig(buildHTTPConfig(c))
+
+	credentials := global.Credentials{
+		AK: c.AccessKey,
+		SK: c.SecretKey,
+	}
+	builder.WithCredentialsType("global.Credentials").WithCredential(&credentials)
+
+	client := iam.NewIamClient(builder.Build())
+	request := &model.KeystoneListProjectsRequest{
+		Name: &c.ProjectName,
+	}
+
+	response, err := client.KeystoneListProjects(request)
+	if err != nil {
+		return "", err
+	}
+
+	if response.Projects == nil || len(*response.Projects) == 0 {
+		return "", fmt.Errorf("can not find the project ID of %s", c.ProjectName)
+	}
+
+	queriedProjects := *response.Projects
+	return queriedProjects[0].Id, nil
 }
 
 func getProxyFromEnv() string {
