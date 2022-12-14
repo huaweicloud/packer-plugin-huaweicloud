@@ -153,7 +153,12 @@ func buildClientByAKSK(c *AccessConfig, client *golangsdk.ProviderClient) error 
 
 // NewHcClient is the common client using huaweicloud-sdk-go-v3 package
 func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, error) {
-	endpoint := GetServiceEndpoint(product, region)
+	cloud, err := GetCloudFromAuth(c.IdentityEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := GetServiceEndpoint(cloud, product, region)
 	if endpoint == "" {
 		return nil, fmt.Errorf("failed to get the endpoint of %q service in region %s", product, region)
 	}
