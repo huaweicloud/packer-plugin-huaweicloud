@@ -95,18 +95,20 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		return multistep.ActionHalt
 	}
 
-	ids := *response.ServerIds
-	jobID := *response.JobId
+	var jobID string
+	var serverID string
+
+	if response.JobId != nil {
+		jobID = *response.JobId
+	}
+
 	serverJob, err := WaitForServerJobSuccess(ui, state, ecsClient, jobID)
 	if err != nil {
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	var serverID string
-	if len(ids) > 0 {
-		serverID = ids[0]
-	} else if serverJob.Entities != nil && len(*serverJob.Entities.SubJobs) > 0 {
+	if serverJob.Entities != nil && len(*serverJob.Entities.SubJobs) > 0 {
 		subJobs := *serverJob.Entities.SubJobs
 		if len(subJobs) > 0 && subJobs[0].Entities != nil {
 			serverID = *subJobs[0].Entities.ServerId
