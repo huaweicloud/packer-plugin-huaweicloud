@@ -109,21 +109,18 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			EIPType:          b.config.EIPType,
 			EIPBandwidthSize: b.config.EIPBandwidthSize,
 		},
-		&StepCreateVolume{
-			VolumeName: b.config.VolumeName,
-			VolumeType: b.config.VolumeType,
-		},
 		&StepRunSourceServer{
 			Name:             b.config.InstanceName,
 			VpcID:            b.config.VpcID,
 			Subnets:          b.config.Subnets,
 			SecurityGroups:   b.config.SecurityGroups,
+			RootVolumeType:   b.config.VolumeType,
+			RootVolumeSize:   b.config.VolumeSize,
 			UserData:         b.config.UserData,
 			UserDataFile:     b.config.UserDataFile,
 			ConfigDrive:      b.config.ConfigDrive,
 			InstanceMetadata: b.config.InstanceMetadata,
 		},
-		&StepAssociatePublicipIP{},
 		&StepGetPassword{
 			Debug: b.config.PackerDebug,
 			Comm:  &b.config.RunConfig.Comm,

@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
@@ -18,9 +16,8 @@ import (
 type stepCreateImage struct{}
 
 func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(*Config)
-	server := state.Get("server").(*servers.Server)
 	ui := state.Get("ui").(packer.Ui)
+	config := state.Get("config").(*Config)
 
 	region := config.Region
 	imsClient, err := config.HcImsClient(region)
@@ -43,10 +40,11 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		index++
 	}
 
+	serverID := state.Get("server_id").(string)
 	requestBody := model.CreateImageRequestBody{
 		Name:        config.ImageName,
 		Description: &config.ImageDescription,
-		InstanceId:  &server.ID,
+		InstanceId:  &serverID,
 		ImageTags:   &taglist,
 	}
 	request := model.CreateImageRequest{
