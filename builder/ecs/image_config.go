@@ -18,7 +18,7 @@ type ImageConfig struct {
 	// usually a project (also called the "tenant") with whom the image is
 	// shared.
 	ImageMembers []string `mapstructure:"image_members" required:"false"`
-	// When true, perform the image accept so the members can see the image in their
+	// **Deprecated**. When true, perform the image accept so the members can see the image in their
 	// project. This requires a user with priveleges both in the build project and
 	// in the members provided. Defaults to false.
 	ImageAutoAcceptMembers bool `mapstructure:"image_auto_accept_members" required:"false"`

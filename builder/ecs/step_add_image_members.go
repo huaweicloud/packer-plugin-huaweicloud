@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/huaweicloud/golangsdk/openstack/imageservice/v2/members"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
 
 type stepAddImageMembers struct{}
@@ -15,43 +15,34 @@ func (s *stepAddImageMembers) Run(ctx context.Context, state multistep.StateBag)
 	ui := state.Get("ui").(packersdk.Ui)
 	config := state.Get("config").(*Config)
 
-	imageId := state.Get("image").(string)
-
 	if len(config.ImageMembers) == 0 {
 		return multistep.ActionContinue
 	}
 
-	imageClient, err := config.imageV2Client()
+	region := config.Region
+	imsClient, err := config.HcImsClient(region)
 	if err != nil {
 		err = fmt.Errorf("Error initializing image service client: %s", err)
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
 
-	for _, member := range config.ImageMembers {
-		ui.Say(fmt.Sprintf("Adding member '%s' to image %s", member, imageId))
-		r := members.Create(imageClient, imageId, member)
-		if _, err = r.Extract(); err != nil {
-			err = fmt.Errorf("Error adding member to image: %s", err)
-			state.Put("error", err)
-			return multistep.ActionHalt
-		}
+	imageId := state.Get("image").(string)
+	ui.Say(fmt.Sprintf("Adding members %v to image %s", config.ImageMembers, imageId))
+	request := &model.BatchAddMembersRequest{
+		Body: &model.BatchAddMembersRequestBody{
+			Images:   []string{imageId},
+			Projects: config.ImageMembers,
+		},
+	}
+	if _, err := imsClient.BatchAddMembers(request); err != nil {
+		err = fmt.Errorf("Error adding member to image: %s", err)
+		state.Put("error", err)
+		return multistep.ActionHalt
 	}
 
 	if config.ImageAutoAcceptMembers {
-		projectId := imageClient.AKSKAuthOptions.ProjectId
-		for _, member := range config.ImageMembers {
-			ui.Say(fmt.Sprintf("Accepting image %s for member '%s'", imageId, member))
-			imageClient.AKSKAuthOptions.ProjectId = member
-			r := members.Update(imageClient, imageId, member, members.UpdateOpts{Status: "accepted"})
-			if _, err = r.Extract(); err != nil {
-				imageClient.AKSKAuthOptions.ProjectId = projectId
-				err = fmt.Errorf("Error accepting image for member: %s", err)
-				state.Put("error", err)
-				return multistep.ActionHalt
-			}
-		}
-		imageClient.AKSKAuthOptions.ProjectId = projectId
+		ui.Message("image_auto_accept_members is not supportted, please accept the image in the target project.")
 	}
 
 	return multistep.ActionContinue
