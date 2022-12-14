@@ -19,10 +19,10 @@ var serviceEndpoints = map[string]ServiceCatalog{
 	"ims": {
 		Name: "ims",
 	},
-	"evs": {
-		Name: "evs",
-	},
 	"vpc": {
+		Name: "vpc",
+	},
+	"eip": {
 		Name: "vpc",
 	},
 }

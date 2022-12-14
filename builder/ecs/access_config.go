@@ -244,7 +244,7 @@ func (c *AccessConfig) HcVpcClient(region string) (*vpc.VpcClient, error) {
 
 // HcEipClient is the EIP service client using huaweicloud-sdk-go-v3 package
 func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
-	hcClient, err := NewHcClient(c, region, "vpc")
+	hcClient, err := NewHcClient(c, region, "eip")
 	if err != nil {
 		return nil, err
 	}
