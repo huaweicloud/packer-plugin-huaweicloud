@@ -3,25 +3,23 @@
 package ecs
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 
-	"github.com/huaweicloud/golangsdk"
-	"github.com/huaweicloud/golangsdk/openstack"
-
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/config"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/httphandler"
 
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
 	eip "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v2"
+	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
 	vpc "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2"
 )
@@ -58,7 +56,7 @@ type AccessConfig struct {
 	// By default this is false.
 	Insecure bool `mapstructure:"insecure" required:"false"`
 
-	hwClient *golangsdk.ProviderClient
+	cloud string
 }
 
 func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
@@ -97,68 +95,27 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		c.IdentityEndpoint = DefaultAuthURL
 	}
 
-	// initialize the ProviderClient
-	client, err := openstack.NewClient(c.IdentityEndpoint)
+	if c.ProjectID == "" {
+		projectID, err := c.getProjectID(c.ProjectName)
+		if err != nil {
+			return []error{err}
+		}
+
+		c.ProjectID = projectID
+	}
+
+	cloudDomain, err := GetCloudFromAuth(c.IdentityEndpoint)
 	if err != nil {
 		return []error{err}
 	}
+	c.cloud = cloudDomain
 
-	// Set UserAgent
-	client.UserAgent.Prepend(UserAgent)
-
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: c.Insecure,
-	}
-	transport := &http.Transport{
-		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: tlsConfig,
-	}
-
-	client.HTTPClient = http.Client{
-		Transport: &LogRoundTripper{
-			Rt:    transport,
-			Debug: logEnabled(),
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if client.AKSKAuthOptions.AccessKey != "" {
-				golangsdk.ReSign(req, golangsdk.SignOptions{
-					AccessKey: client.AKSKAuthOptions.AccessKey,
-					SecretKey: client.AKSKAuthOptions.SecretKey,
-				})
-			}
-			return nil
-		},
-	}
-
-	err = buildClientByAKSK(c, client)
-	if err != nil {
-		return []error{err}
-	}
-	c.hwClient = client
-	c.ProjectID = client.ProjectID
 	return nil
-}
-
-func buildClientByAKSK(c *AccessConfig, client *golangsdk.ProviderClient) error {
-	ao := golangsdk.AKSKAuthOptions{
-		AccessKey:        c.AccessKey,
-		SecretKey:        c.SecretKey,
-		ProjectName:      c.ProjectName,
-		ProjectId:        c.ProjectID,
-		IdentityEndpoint: c.IdentityEndpoint,
-	}
-
-	return openstack.Authenticate(client, ao)
 }
 
 // NewHcClient is the common client using huaweicloud-sdk-go-v3 package
 func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, error) {
-	cloud, err := GetCloudFromAuth(c.IdentityEndpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint := GetServiceEndpoint(cloud, product, region)
+	endpoint := GetServiceEndpoint(c.cloud, product, region)
 	if endpoint == "" {
 		return nil, fmt.Errorf("failed to get the endpoint of %q service in region %s", product, region)
 	}
@@ -166,10 +123,9 @@ func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, e
 	builder := core.NewHcHttpClientBuilder().WithEndpoint(endpoint).WithHttpConfig(buildHTTPConfig(c))
 
 	credentials := basic.Credentials{
-		AK:          c.AccessKey,
-		SK:          c.SecretKey,
-		ProjectId:   c.ProjectID,
-		IamEndpoint: c.IdentityEndpoint,
+		AK:        c.AccessKey,
+		SK:        c.SecretKey,
+		ProjectId: c.ProjectID,
 	}
 	builder.WithCredential(&credentials)
 
@@ -244,7 +200,7 @@ func (c *AccessConfig) HcVpcClient(region string) (*vpc.VpcClient, error) {
 
 // HcEipClient is the EIP service client using huaweicloud-sdk-go-v3 package
 func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
-	hcClient, err := NewHcClient(c, region, "vpc")
+	hcClient, err := NewHcClient(c, region, "eip")
 	if err != nil {
 		return nil, err
 	}
@@ -252,43 +208,31 @@ func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
 	return eip.NewEipClient(hcClient), nil
 }
 
-func (c *AccessConfig) computeV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewComputeV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
+func (c *AccessConfig) getProjectID(region string) (string, error) {
+	builder := core.NewHcHttpClientBuilder().WithEndpoint(c.IdentityEndpoint).WithHttpConfig(buildHTTPConfig(c))
 
-func (c *AccessConfig) imageV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewImageServiceV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
+	credentials := global.Credentials{
+		AK: c.AccessKey,
+		SK: c.SecretKey,
+	}
+	builder.WithCredentialsType("global.Credentials").WithCredential(&credentials)
 
-func (c *AccessConfig) blockStorageV3Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewBlockStorageV3(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
+	client := iam.NewIamClient(builder.Build())
+	request := &model.KeystoneListProjectsRequest{
+		Name: &c.ProjectName,
+	}
 
-func (c *AccessConfig) networkV2Client() (*golangsdk.ServiceClient, error) {
-	return openstack.NewNetworkV2(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
+	response, err := client.KeystoneListProjects(request)
+	if err != nil {
+		return "", err
+	}
 
-func (c *AccessConfig) vpcClient() (*golangsdk.ServiceClient, error) {
-	return openstack.NewNetworkV1(c.hwClient, golangsdk.EndpointOpts{
-		Region:       c.Region,
-		Availability: c.getEndpointType(),
-	})
-}
+	if response.Projects == nil || len(*response.Projects) == 0 {
+		return "", fmt.Errorf("can not find the project ID of %s", c.ProjectName)
+	}
 
-func (c *AccessConfig) getEndpointType() golangsdk.Availability {
-	return golangsdk.AvailabilityPublic
+	queriedProjects := *response.Projects
+	return queriedProjects[0].Id, nil
 }
 
 func getProxyFromEnv() string {
