@@ -153,12 +153,17 @@ func (s *StepCreatePublicipIP) createEIP(ui packer.Ui, config *Config, stateBag 
 	publicipOpts := model.CreatePublicipOption{
 		Type: s.EIPType,
 	}
-	request := &model.CreatePublicipRequest{
-		Body: &model.CreatePublicipRequestBody{
-			Publicip:  &publicipOpts,
-			Bandwidth: &bandwidthOpts,
-		},
+	requestBody := model.CreatePublicipRequestBody{
+		Publicip:  &publicipOpts,
+		Bandwidth: &bandwidthOpts,
 	}
+	if config.EnterpriseProjectId != "" {
+		requestBody.EnterpriseProjectId = &config.EnterpriseProjectId
+	}
+	request := &model.CreatePublicipRequest{
+		Body: &requestBody,
+	}
+
 	response, err := eipClient.CreatePublicip(request)
 	if err != nil {
 		err = fmt.Errorf("Error creating EIP: %s", err)

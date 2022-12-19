@@ -65,7 +65,7 @@ func (s *StepCreateNetwork) Run(ctx context.Context, state multistep.StateBag) m
 		}
 
 		ui.Say("Creating temporary VPC...")
-		vpcID, err := s.createVPC(vpcClient)
+		vpcID, err := s.createVPC(vpcClient, config)
 		if err != nil {
 			state.Put("error", err)
 			ui.Error(err.Error())
@@ -152,13 +152,17 @@ func (s *StepCreateNetwork) Cleanup(state multistep.StateBag) {
 	}
 }
 
-func (s *StepCreateNetwork) createVPC(client *vpc.VpcClient) (string, error) {
+func (s *StepCreateNetwork) createVPC(client *vpc.VpcClient, conf *Config) (string, error) {
 	vpcName := fmt.Sprintf("vpc-packer-%s", random.AlphaNumLower(6))
 	vpcCIDR := "172.16.0.0/16"
 
 	createOpts := model.CreateVpcOption{
 		Name: &vpcName,
 		Cidr: &vpcCIDR,
+	}
+
+	if conf.EnterpriseProjectId != "" {
+		createOpts.EnterpriseProjectId = &conf.EnterpriseProjectId
 	}
 	request := &model.CreateVpcRequest{
 		Body: &model.CreateVpcRequestBody{
