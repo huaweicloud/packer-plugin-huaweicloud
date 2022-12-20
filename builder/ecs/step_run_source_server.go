@@ -219,7 +219,7 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 }
 
 func WaitForServerJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs.EcsClient, jobID string) (*model.ShowJobResponse, error) {
-	ui.Say("Waiting for server to become ready...")
+	ui.Message("Waiting for server to become ready...")
 	stateChange := StateChangeConf{
 		Pending:      []string{"INIT", "RUNNING"},
 		Target:       []string{"SUCCESS"},
