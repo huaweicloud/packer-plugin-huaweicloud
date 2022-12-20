@@ -111,15 +111,10 @@ type RunConfig struct {
 	// The ID of Enterprise Project in which to create the image.
 	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
 	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
-	// Name of the Block Storage service volume. If this isn't specified,
-	// random string will be used.
-	VolumeName string `mapstructure:"volume_name" required:"false"`
-	// Type of the Block Storage service volume.
+	// The system disk type of the instance. Defaults to `SSD`.
 	VolumeType string `mapstructure:"volume_type" required:"false"`
-	// Size of the Block Storage service volume in GB. If this isn't specified,
-	// it is set to source image min disk value (if set) or calculated from the
-	// source image bytes size. Note that in some cases this needs to be
-	// specified, if use_blockstorage_volume is true.
+	// The system disk size in GB. If this parameter is not specified,
+	// it is set to the minimum value of the system disk in the source image.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
 
 	sourceImageOpts *model.ListImagesRequest
@@ -223,11 +218,6 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		if len(value) > 255 {
 			errs = append(errs, fmt.Errorf("Instance metadata value too long (max 255 bytes): %s", value))
 		}
-	}
-
-	// Use random name for the Block Storage volume if it's not provided.
-	if c.VolumeName == "" {
-		c.VolumeName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())
 	}
 
 	// if neither ID or image name is provided outside the filter, build the

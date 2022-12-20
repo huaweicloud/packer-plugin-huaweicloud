@@ -69,7 +69,6 @@ func TestRunConfigPrepare_BlockStorage(t *testing.T) {
 	c := testRunConfig()
 	c.VolumeType = "fast"
 	c.AvailabilityZone = "RegionOne"
-	c.VolumeName = "PackerVolume"
 
 	if err := c.Prepare(nil); len(err) != 0 {
 		t.Fatalf("err: %s", err)
@@ -79,10 +78,7 @@ func TestRunConfigPrepare_BlockStorage(t *testing.T) {
 		t.Fatalf("invalid value: %s", c.VolumeType)
 	}
 	if c.AvailabilityZone != "RegionOne" {
-		t.Fatalf("invalid value: %s", c.VolumeName)
-	}
-	if c.VolumeName != "PackerVolume" {
-		t.Fatalf("invalid value: %s", c.VolumeName)
+		t.Fatalf("invalid value: %s", c.AvailabilityZone)
 	}
 }
 

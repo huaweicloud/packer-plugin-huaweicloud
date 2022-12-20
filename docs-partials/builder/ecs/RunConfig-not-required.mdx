@@ -90,14 +90,9 @@
 - `enterprise_project_id` (string) - The ID of Enterprise Project in which to create the image.
   If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
 
-- `volume_name` (string) - Name of the Block Storage service volume. If this isn't specified,
-  random string will be used.
+- `volume_type` (string) - The system disk type of the instance. Defaults to `SSD`.
 
-- `volume_type` (string) - Type of the Block Storage service volume.
-
-- `volume_size` (int) - Size of the Block Storage service volume in GB. If this isn't specified,
-  it is set to source image min disk value (if set) or calculated from the
-  source image bytes size. Note that in some cases this needs to be
-  specified, if use_blockstorage_volume is true.
+- `volume_size` (int) - The system disk size in GB. If this parameter is not specified,
+  it is set to the minimum value of the system disk in the source image.
 
 <!-- End of code generated from the comments of the RunConfig struct in builder/ecs/run_config.go; -->

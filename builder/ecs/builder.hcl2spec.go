@@ -98,7 +98,6 @@ type FlatConfig struct {
 	InstanceMetadata          map[string]string `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata" hcl:"instance_metadata"`
 	ConfigDrive               *bool             `mapstructure:"config_drive" required:"false" cty:"config_drive" hcl:"config_drive"`
 	EnterpriseProjectId       *string           `mapstructure:"enterprise_project_id" required:"false" cty:"enterprise_project_id" hcl:"enterprise_project_id"`
-	VolumeName                *string           `mapstructure:"volume_name" required:"false" cty:"volume_name" hcl:"volume_name"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
 }
@@ -203,7 +202,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_metadata":            &hcldec.AttrSpec{Name: "instance_metadata", Type: cty.Map(cty.String), Required: false},
 		"config_drive":                 &hcldec.AttrSpec{Name: "config_drive", Type: cty.Bool, Required: false},
 		"enterprise_project_id":        &hcldec.AttrSpec{Name: "enterprise_project_id", Type: cty.String, Required: false},
-		"volume_name":                  &hcldec.AttrSpec{Name: "volume_name", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
 	}
