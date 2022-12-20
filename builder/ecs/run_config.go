@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions
+//go:generate packer-sdc mapstructure-to-hcl2 -type ImageFilter,ImageFilterOptions,DataVolume
 
 package ecs
 
@@ -111,18 +111,41 @@ type RunConfig struct {
 	// The ID of Enterprise Project in which to create the image.
 	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
 	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
-	// Name of the Block Storage service volume. If this isn't specified,
-	// random string will be used.
-	VolumeName string `mapstructure:"volume_name" required:"false"`
-	// Type of the Block Storage service volume.
+	// The system disk type of the instance. Defaults to `SSD`.
 	VolumeType string `mapstructure:"volume_type" required:"false"`
-	// Size of the Block Storage service volume in GB. If this isn't specified,
-	// it is set to source image min disk value (if set) or calculated from the
-	// source image bytes size. Note that in some cases this needs to be
-	// specified, if use_blockstorage_volume is true.
+	// The system disk size in GB. If this parameter is not specified,
+	// it is set to the minimum value of the system disk in the source image.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
+	// Add one or more data disks to the instance before creating the image.
+	// Usage example:
+	//
+	// ``` json {
+	//   "data_disks": [
+	//     {
+	//       "volume_size": 100,
+	//       "volume_type": "GPSSD"
+	//     }
+	//   ],
+	//   ...
+	// }
+	// ```
+	//
+	// The data_disks allow for the following argument:
+	//   -  `volume_size` (int, required) - The data disk size in GB.
+	//   -  `volume_type` (string) - The data disk type of the instance. Defaults to `SSD`.
+	DataVolumes []DataVolume `mapstructure:"data_disks" required:"false"`
+	// The ID of the vault to which the instance is to be added.
+	// This parameter is **mandatory** when creating a full-ECS image from the instance.
+	Vault string `mapstructure:"vault_id" required:"false"`
 
 	sourceImageOpts *model.ListImagesRequest
+}
+
+type DataVolume struct {
+	// The data disk size in GB.
+	Size int `mapstructure:"volume_size" required:"true"`
+	// The data disk type of the instance. Defaults to `SSD`.
+	Type string `mapstructure:"volume_type" required:"false"`
 }
 
 type ImageFilter struct {
@@ -216,6 +239,10 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		c.EnterpriseProjectId = os.Getenv("HW_ENTERPRISE_PROJECT_ID")
 	}
 
+	if c.Vault == "" && len(c.DataVolumes) > 0 {
+		errs = append(errs, fmt.Errorf("vault_id is missing for Full-ECS image"))
+	}
+
 	for key, value := range c.InstanceMetadata {
 		if len(key) > 255 {
 			errs = append(errs, fmt.Errorf("Instance metadata key too long (max 255 bytes): %s", key))
@@ -223,11 +250,6 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		if len(value) > 255 {
 			errs = append(errs, fmt.Errorf("Instance metadata value too long (max 255 bytes): %s", value))
 		}
-	}
-
-	// Use random name for the Block Storage volume if it's not provided.
-	if c.VolumeName == "" {
-		c.VolumeName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())
 	}
 
 	// if neither ID or image name is provided outside the filter, build the

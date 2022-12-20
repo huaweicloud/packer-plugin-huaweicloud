@@ -30,34 +30,18 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	// Create the image
 	ui.Say(fmt.Sprintf("Creating the image: %s", config.ImageName))
 
-	taglist := make([]model.TagKeyValue, len(config.ImageTags))
-	index := 0
-	for k, v := range config.ImageTags {
-		taglist[index] = model.TagKeyValue{
-			Key:   k,
-			Value: v,
-		}
-		index++
-	}
+	var jobID string
+	var createErr error
 
 	serverID := state.Get("server_id").(string)
-	requestBody := model.CreateImageRequestBody{
-		Name:        config.ImageName,
-		Description: &config.ImageDescription,
-		InstanceId:  &serverID,
-		ImageTags:   &taglist,
-	}
-	if config.EnterpriseProjectId != "" {
-		requestBody.EnterpriseProjectId = &config.EnterpriseProjectId
-	}
-	request := model.CreateImageRequest{
-		Body: &requestBody,
+	if len(config.DataVolumes) == 0 {
+		jobID, createErr = createServerImage(config, imsClient, serverID)
+	} else {
+		jobID, createErr = createServerWholeImage(config, imsClient, serverID)
 	}
 
-	log.Printf("[DEBUG] Create image options: %+v", requestBody)
-	response, err := imsClient.CreateImage(&request)
-	if err != nil {
-		err := fmt.Errorf("Error creating image: %s", err)
+	if createErr != nil {
+		err := fmt.Errorf("Error creating image: %s", createErr)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
@@ -65,7 +49,6 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	// Wait for the image to become available
 	ui.Say(fmt.Sprintf("Waiting for image %s to become available ...", config.ImageName))
-	jobID := *response.JobId
 	stateConf := &StateChangeConf{
 		Pending:      []string{"INIT", "RUNNING"},
 		Target:       []string{"SUCCESS"},
@@ -114,6 +97,89 @@ func getImsJobStatus(client *ims.ImsClient, jobID string) StateRefreshFunc {
 		}
 
 		jobStatus := jobResponse.Status.Value()
+
+		if jobStatus == "FAIL" {
+			return jobResponse, jobStatus, fmt.Errorf("failed to create image: %s", *jobResponse.FailReason)
+		}
 		return jobResponse, jobStatus, nil
 	}
+}
+
+func buildImageTag(conf *Config) []model.TagKeyValue {
+	if len(conf.ImageTags) == 0 {
+		return nil
+	}
+
+	taglist := make([]model.TagKeyValue, len(conf.ImageTags))
+	index := 0
+	for k, v := range conf.ImageTags {
+		taglist[index] = model.TagKeyValue{
+			Key:   k,
+			Value: v,
+		}
+		index++
+	}
+
+	return taglist
+}
+
+func createServerImage(conf *Config, client *ims.ImsClient, serverID string) (string, error) {
+	requestBody := model.CreateImageRequestBody{
+		Name:        conf.ImageName,
+		Description: &conf.ImageDescription,
+		InstanceId:  &serverID,
+	}
+
+	if conf.EnterpriseProjectId != "" {
+		requestBody.EnterpriseProjectId = &conf.EnterpriseProjectId
+	}
+	if taglist := buildImageTag(conf); taglist != nil {
+		requestBody.ImageTags = &taglist
+	}
+
+	request := model.CreateImageRequest{
+		Body: &requestBody,
+	}
+
+	log.Printf("[DEBUG] Create image options: %+v", requestBody)
+	response, err := client.CreateImage(&request)
+	if err != nil {
+		return "", err
+	}
+
+	if response.JobId == nil {
+		return "", fmt.Errorf("can not get the job from API response")
+	}
+	return *response.JobId, nil
+}
+
+func createServerWholeImage(conf *Config, client *ims.ImsClient, serverID string) (string, error) {
+	requestBody := model.CreateWholeImageRequestBody{
+		Name:        conf.ImageName,
+		Description: &conf.ImageDescription,
+		InstanceId:  &serverID,
+		VaultId:     &conf.Vault,
+	}
+
+	if conf.EnterpriseProjectId != "" {
+		requestBody.EnterpriseProjectId = &conf.EnterpriseProjectId
+	}
+	if taglist := buildImageTag(conf); taglist != nil {
+		requestBody.ImageTags = &taglist
+	}
+
+	request := model.CreateWholeImageRequest{
+		Body: &requestBody,
+	}
+
+	log.Printf("[DEBUG] Create image options: %+v", requestBody)
+	response, err := client.CreateWholeImage(&request)
+	if err != nil {
+		return "", err
+	}
+
+	if response.JobId == nil {
+		return "", fmt.Errorf("can not get the job from API response")
+	}
+	return *response.JobId, nil
 }
