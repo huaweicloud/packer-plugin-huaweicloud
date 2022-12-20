@@ -129,7 +129,10 @@ func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, e
 	}
 	builder.WithCredential(&credentials)
 
-	return builder.Build(), nil
+	headers := map[string]string{
+		"User-Agent": UserAgent,
+	}
+	return builder.Build().PreInvoke(headers), nil
 }
 
 func buildHTTPConfig(c *AccessConfig) *config.HttpConfig {
@@ -217,7 +220,10 @@ func (c *AccessConfig) getProjectID(region string) (string, error) {
 	}
 	builder.WithCredentialsType("global.Credentials").WithCredential(&credentials)
 
-	client := iam.NewIamClient(builder.Build())
+	headers := map[string]string{
+		"User-Agent": UserAgent,
+	}
+	client := iam.NewIamClient(builder.Build().PreInvoke(headers))
 	request := &model.KeystoneListProjectsRequest{
 		Name: &c.ProjectName,
 	}

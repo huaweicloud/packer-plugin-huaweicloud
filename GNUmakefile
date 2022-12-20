@@ -41,7 +41,7 @@ install-gen-deps: ## Install dependencies for code generation
 	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 
 generate: ## install-gen-deps
-	# add $GOPATH into $PATH when failed
+	# add $$GOPATH into $$PATH when failed
 	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 	@go generate -v ./...
 
