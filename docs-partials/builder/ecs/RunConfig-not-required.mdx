@@ -95,4 +95,25 @@
 - `volume_size` (int) - The system disk size in GB. If this parameter is not specified,
   it is set to the minimum value of the system disk in the source image.
 
+- `data_disks` ([]DataVolume) - Add one or more data disks to the instance before creating the image.
+  Usage example:
+  
+  ``` json {
+    "data_disks": [
+      {
+        "volume_size": 100,
+        "volume_type": "GPSSD"
+      }
+    ],
+    ...
+  }
+  ```
+  
+  The data_disks allow for the following argument:
+    -  `volume_size` (int, required) - The data disk size in GB.
+    -  `volume_type` (string) - The data disk type of the instance. Defaults to `SSD`.
+
+- `vault_id` (string) - The ID of the vault to which the instance is to be added.
+  This parameter is **mandatory** when creating a full-ECS image from the instance.
+
 <!-- End of code generated from the comments of the RunConfig struct in builder/ecs/run_config.go; -->

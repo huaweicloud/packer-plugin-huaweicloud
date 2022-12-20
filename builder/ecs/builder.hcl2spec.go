@@ -100,6 +100,8 @@ type FlatConfig struct {
 	EnterpriseProjectId       *string           `mapstructure:"enterprise_project_id" required:"false" cty:"enterprise_project_id" hcl:"enterprise_project_id"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
+	DataVolumes               []FlatDataVolume  `mapstructure:"data_disks" required:"false" cty:"data_disks" hcl:"data_disks"`
+	Vault                     *string           `mapstructure:"vault_id" required:"false" cty:"vault_id" hcl:"vault_id"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -204,6 +206,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"enterprise_project_id":        &hcldec.AttrSpec{Name: "enterprise_project_id", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
+		"data_disks":                   &hcldec.BlockListSpec{TypeName: "data_disks", Nested: hcldec.ObjectSpec((*FlatDataVolume)(nil).HCL2Spec())},
+		"vault_id":                     &hcldec.AttrSpec{Name: "vault_id", Type: cty.String, Required: false},
 	}
 	return s
 }

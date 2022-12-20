@@ -54,6 +54,12 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		return multistep.ActionHalt
 	}
 
+	dataVolumes, err := buildDataVolumes(config)
+	if err != nil {
+		state.Put("error", err)
+		return multistep.ActionHalt
+	}
+
 	userData := s.UserData
 	if s.UserDataFile != "" {
 		rawData, err := ioutil.ReadFile(s.UserDataFile)
@@ -83,6 +89,9 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		Metadata:         s.InstanceMetadata,
 	}
 
+	if dataVolumes != nil {
+		serverbody.DataVolumes = &dataVolumes
+	}
 	if config.EnterpriseProjectId != "" {
 		serverbody.Extendparam = &model.PostPaidServerExtendParam{
 			EnterpriseProjectId: &config.EnterpriseProjectId,
@@ -195,9 +204,11 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 			Id: serverID,
 		},
 	}
+	cleanup := true
 	request := &model.DeleteServersRequest{
 		Body: &model.DeleteServersRequestBody{
-			Servers: serversbody,
+			Servers:      serversbody,
+			DeleteVolume: &cleanup,
 		},
 	}
 	_, err = ecsClient.DeleteServers(request)
@@ -309,4 +320,28 @@ func (s *StepRunSourceServer) buildRootVolume() (*model.PostPaidServerRootVolume
 	}
 
 	return &rootVolume, nil
+}
+
+func buildDataVolumes(conf *Config) ([]model.PostPaidServerDataVolume, error) {
+	if len(conf.DataVolumes) == 0 {
+		return nil, nil
+	}
+
+	dataVolumes := make([]model.PostPaidServerDataVolume, len(conf.DataVolumes))
+	for i, volume := range conf.DataVolumes {
+		if volume.Type == "" {
+			volume.Type = "SSD"
+		}
+		var volumeType model.PostPaidServerDataVolumeVolumetype
+		err := volumeType.UnmarshalJSON([]byte(volume.Type))
+		if err != nil {
+			return nil, fmt.Errorf("Error parsing the data volume type %s: %s", volume.Type, err)
+		}
+
+		dataVolumes[i] = model.PostPaidServerDataVolume{
+			Volumetype: volumeType,
+			Size:       int32(volume.Size),
+		}
+	}
+	return dataVolumes, nil
 }

@@ -7,6 +7,31 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+// FlatDataVolume is an auto-generated flat version of DataVolume.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatDataVolume struct {
+	Size *int    `mapstructure:"volume_size" required:"true" cty:"volume_size" hcl:"volume_size"`
+	Type *string `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
+}
+
+// FlatMapstructure returns a new FlatDataVolume.
+// FlatDataVolume is an auto-generated flat version of DataVolume.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*DataVolume) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatDataVolume)
+}
+
+// HCL2Spec returns the hcl spec of a DataVolume.
+// This spec is used by HCL to read the fields of DataVolume.
+// The decoded values from this spec will then be applied to a FlatDataVolume.
+func (*FlatDataVolume) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"volume_size": &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
+		"volume_type": &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
+	}
+	return s
+}
+
 // FlatImageFilter is an auto-generated flat version of ImageFilter.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatImageFilter struct {
