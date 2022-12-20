@@ -37,12 +37,12 @@ type AccessConfig struct {
 	// The secret key of the HuaweiCloud to use.
 	// If omitted, the HW_SECRET_KEY environment variable is used.
 	SecretKey string `mapstructure:"secret_key" required:"true"`
-	// Specifies the HuaweiCloud region in which to launch the server to create the image.
+	// The HuaweiCloud region in which to launch the server to create the image.
 	// If omitted, the HW_REGION_NAME environment variable is used.
 	Region string `mapstructure:"region" required:"true"`
 
-	// The Name of the project to login with.
-	// If omitted, the HW_PROJECT_NAME environment variable or Region is used.
+	// The name of the project to login with.
+	// If omitted, the HW_PROJECT_NAME environment variable or `region` is used.
 	ProjectName string `mapstructure:"project_name" required:"false"`
 	// The ID of the project to login with.
 	// If omitted, the HW_PROJECT_ID environment variable is used.

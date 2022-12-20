@@ -27,9 +27,9 @@ type FlatConfig struct {
 	Insecure                  *bool             `mapstructure:"insecure" required:"false" cty:"insecure" hcl:"insecure"`
 	ImageName                 *string           `mapstructure:"image_name" required:"true" cty:"image_name" hcl:"image_name"`
 	ImageDescription          *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
+	ImageTags                 map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags" hcl:"image_tags"`
 	ImageMembers              []string          `mapstructure:"image_members" required:"false" cty:"image_members" hcl:"image_members"`
 	ImageAutoAcceptMembers    *bool             `mapstructure:"image_auto_accept_members" required:"false" cty:"image_auto_accept_members" hcl:"image_auto_accept_members"`
-	ImageTags                 map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags" hcl:"image_tags"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
 	SSHHost                   *string           `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
@@ -80,10 +80,11 @@ type FlatConfig struct {
 	WinRMInsecure             *bool             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
 	Flavor                    *string           `mapstructure:"flavor" required:"true" cty:"flavor" hcl:"flavor"`
+	EnterpriseProjectId       *string           `mapstructure:"enterprise_project_id" required:"false" cty:"enterprise_project_id" hcl:"enterprise_project_id"`
+	AvailabilityZone          *string           `mapstructure:"availability_zone" required:"false" cty:"availability_zone" hcl:"availability_zone"`
 	SourceImage               *string           `mapstructure:"source_image" required:"false" cty:"source_image" hcl:"source_image"`
 	SourceImageName           *string           `mapstructure:"source_image_name" required:"false" cty:"source_image_name" hcl:"source_image_name"`
 	SourceImageFilters        *FlatImageFilter  `mapstructure:"source_image_filter" required:"false" cty:"source_image_filter" hcl:"source_image_filter"`
-	AvailabilityZone          *string           `mapstructure:"availability_zone" required:"false" cty:"availability_zone" hcl:"availability_zone"`
 	FloatingIP                *string           `mapstructure:"floating_ip" required:"false" cty:"floating_ip" hcl:"floating_ip"`
 	ReuseIPs                  *bool             `mapstructure:"reuse_ips" required:"false" cty:"reuse_ips" hcl:"reuse_ips"`
 	EIPType                   *string           `mapstructure:"eip_type" required:"false" cty:"eip_type" hcl:"eip_type"`
@@ -97,7 +98,6 @@ type FlatConfig struct {
 	InstanceName              *string           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	InstanceMetadata          map[string]string `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata" hcl:"instance_metadata"`
 	ConfigDrive               *bool             `mapstructure:"config_drive" required:"false" cty:"config_drive" hcl:"config_drive"`
-	EnterpriseProjectId       *string           `mapstructure:"enterprise_project_id" required:"false" cty:"enterprise_project_id" hcl:"enterprise_project_id"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
 	DataVolumes               []FlatDataVolume  `mapstructure:"data_disks" required:"false" cty:"data_disks" hcl:"data_disks"`
@@ -133,9 +133,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"insecure":                     &hcldec.AttrSpec{Name: "insecure", Type: cty.Bool, Required: false},
 		"image_name":                   &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_description":            &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"image_tags":                   &hcldec.AttrSpec{Name: "image_tags", Type: cty.Map(cty.String), Required: false},
 		"image_members":                &hcldec.AttrSpec{Name: "image_members", Type: cty.List(cty.String), Required: false},
 		"image_auto_accept_members":    &hcldec.AttrSpec{Name: "image_auto_accept_members", Type: cty.Bool, Required: false},
-		"image_tags":                   &hcldec.AttrSpec{Name: "image_tags", Type: cty.Map(cty.String), Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
 		"ssh_host":                     &hcldec.AttrSpec{Name: "ssh_host", Type: cty.String, Required: false},
@@ -186,10 +186,11 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_insecure":               &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":               &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
 		"flavor":                       &hcldec.AttrSpec{Name: "flavor", Type: cty.String, Required: false},
+		"enterprise_project_id":        &hcldec.AttrSpec{Name: "enterprise_project_id", Type: cty.String, Required: false},
+		"availability_zone":            &hcldec.AttrSpec{Name: "availability_zone", Type: cty.String, Required: false},
 		"source_image":                 &hcldec.AttrSpec{Name: "source_image", Type: cty.String, Required: false},
 		"source_image_name":            &hcldec.AttrSpec{Name: "source_image_name", Type: cty.String, Required: false},
 		"source_image_filter":          &hcldec.BlockSpec{TypeName: "source_image_filter", Nested: hcldec.ObjectSpec((*FlatImageFilter)(nil).HCL2Spec())},
-		"availability_zone":            &hcldec.AttrSpec{Name: "availability_zone", Type: cty.String, Required: false},
 		"floating_ip":                  &hcldec.AttrSpec{Name: "floating_ip", Type: cty.String, Required: false},
 		"reuse_ips":                    &hcldec.AttrSpec{Name: "reuse_ips", Type: cty.Bool, Required: false},
 		"eip_type":                     &hcldec.AttrSpec{Name: "eip_type", Type: cty.String, Required: false},
@@ -203,7 +204,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_name":                &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"instance_metadata":            &hcldec.AttrSpec{Name: "instance_metadata", Type: cty.Map(cty.String), Required: false},
 		"config_drive":                 &hcldec.AttrSpec{Name: "config_drive", Type: cty.Bool, Required: false},
-		"enterprise_project_id":        &hcldec.AttrSpec{Name: "enterprise_project_id", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
 		"data_disks":                   &hcldec.BlockListSpec{TypeName: "data_disks", Nested: hcldec.ObjectSpec((*FlatDataVolume)(nil).HCL2Spec())},
