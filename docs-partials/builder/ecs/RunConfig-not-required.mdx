@@ -87,6 +87,9 @@
 
 - `config_drive` (bool) - Whether or not nova should use ConfigDrive for cloud-init metadata.
 
+- `enterprise_project_id` (string) - The ID of Enterprise Project in which to create the image.
+  If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
+
 - `volume_name` (string) - Name of the Block Storage service volume. If this isn't specified,
   random string will be used.
 

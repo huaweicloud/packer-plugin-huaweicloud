@@ -57,6 +57,10 @@ func (s *StepLoadAZ) Run(ctx context.Context, state multistep.StateBag) multiste
 		ui.Message(fmt.Sprintf("Select %s as the availability zone", s.AvailabilityZone))
 	}
 
+	if config.EnterpriseProjectId != "" {
+		ui.Say(fmt.Sprintf("Enterprise Project ID: %s", config.EnterpriseProjectId))
+	}
+
 	state.Put("availability_zone", s.AvailabilityZone)
 	return multistep.ActionContinue
 }

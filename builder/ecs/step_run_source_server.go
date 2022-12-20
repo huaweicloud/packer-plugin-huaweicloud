@@ -82,6 +82,13 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		UserData:         &userData,
 		Metadata:         s.InstanceMetadata,
 	}
+
+	if config.EnterpriseProjectId != "" {
+		serverbody.Extendparam = &model.PostPaidServerExtendParam{
+			EnterpriseProjectId: &config.EnterpriseProjectId,
+		}
+	}
+
 	request := &model.CreatePostPaidServersRequest{
 		Body: &model.CreatePostPaidServersRequestBody{
 			Server: serverbody,

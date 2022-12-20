@@ -6,6 +6,7 @@ package ecs
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -107,6 +108,9 @@ type RunConfig struct {
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
+	// The ID of Enterprise Project in which to create the image.
+	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
+	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
 	// Name of the Block Storage service volume. If this isn't specified,
 	// random string will be used.
 	VolumeName string `mapstructure:"volume_name" required:"false"`
@@ -206,6 +210,10 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 
 	if c.SSHIPVersion != "" && c.SSHIPVersion != "4" && c.SSHIPVersion != "6" {
 		errs = append(errs, errors.New("SSH IP version must be either 4 or 6"))
+	}
+
+	if c.EnterpriseProjectId == "" {
+		c.EnterpriseProjectId = os.Getenv("HW_ENTERPRISE_PROJECT_ID")
 	}
 
 	for key, value := range c.InstanceMetadata {

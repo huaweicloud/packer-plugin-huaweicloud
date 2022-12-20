@@ -47,6 +47,9 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		InstanceId:  &serverID,
 		ImageTags:   &taglist,
 	}
+	if config.EnterpriseProjectId != "" {
+		requestBody.EnterpriseProjectId = &config.EnterpriseProjectId
+	}
 	request := model.CreateImageRequest{
 		Body: &requestBody,
 	}
