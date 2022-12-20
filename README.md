@@ -34,34 +34,31 @@ uncompress it to retrieve the plugin binary file corresponding to your platform.
 To install the plugin, please follow the Packer documentation on
 [installing a plugin](https://www.packer.io/docs/extending/plugins/#installing-plugins).
 
-
-### Install from source:
+### Install from source
 
 If you prefer to build the plugin from source, clone the GitHub repository
 to `$GOPATH/src/github.com/huaweicloud/packer-plugin-huaweicloud`.
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/huaweicloud; cd $GOPATH/src/github.com/huaweicloud
-$ git clone git@github.com:huaweicloud/packer-plugin-huaweicloud.git
+mkdir -p $GOPATH/src/github.com/huaweicloud; cd $GOPATH/src/github.com/huaweicloud
+git clone git@github.com:huaweicloud/packer-plugin-huaweicloud.git
 ```
 
 Then enter the plugin directory and run `make build` command to build the plugin.
 
 ```sh
-$ cd $GOPATH/src/github.com/huaweicloud/packer-plugin-huaweicloud
-$ make build
+cd $GOPATH/src/github.com/huaweicloud/packer-plugin-huaweicloud
+make build
 ```
 
 Upon successful compilation, a `packer-plugin-huaweicloud` plugin binary file
 can be found in the directory. To install the compiled plugin, please follow the
 official Packer documentation on [installing a plugin](https://www.packer.io/docs/extending/plugins/#installing-plugins).
 
-
 ### Configuration
 
 For more information on how to configure the plugin, please read the
 documentation located in the [`docs/`](docs) directory.
-
 
 ## Contributing
 
