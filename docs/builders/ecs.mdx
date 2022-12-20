@@ -85,10 +85,6 @@ Here is a basic example for HuaweiCloud.
             "image_name": "{{ image_name }}",
             "source_image": "{{ source_image }}",
             "flavor": "s6.large.2",
-            "vpc_id": "{{ vpc_id }}",
-            "subnets": [
-                "{{ subnet }}"
-            ],
             "security_groups": [
               "{{ security_group }}"
             ],
@@ -126,14 +122,7 @@ variable "access_key" {
 variable "secret_key" {
   type = string
 }
-
 variable "source_image_id" {
-  type = string
-}
-variable "vpc_id" {
-  type = string
-}
-variable "subent_id" {
   type = string
 }
 
@@ -144,10 +133,8 @@ source "huaweicloud-ecs" "basic-example" {
   flavor             = "s6.large.2"
   image_name         = "packer-image"
   source_image       = var.source_image_id
-  vpc_id             = var.vpc_id
-  subnets            = [var.subent_id]
   security_groups    = ["default"]
-  eip_bandwidth_size = 2
+  eip_bandwidth_size = 5
   eip_type           = "5_bgp"
   ssh_ip_version     = "4"
   ssh_username       = "root"
