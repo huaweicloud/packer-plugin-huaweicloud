@@ -16,6 +16,25 @@ import (
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
 )
 
+// refer to: https://support.huaweicloud.com/intl/en-us/dns_faq/dns_faq_002.html
+var defaultDNSList = map[string][]string{
+	"cn-north-1":     {"100.125.1.250", "100.125.21.250"},  // Beijing-1
+	"cn-north-4":     {"100.125.1.250", "100.125.129.250"}, // Beijing-4
+	"cn-east-2":      {"100.125.17.29", "100.125.135.29"},  // Shanghai-2
+	"cn-east-3":      {"100.125.1.250", "100.125.64.250"},  // Shanghai-1
+	"cn-south-1":     {"100.125.1.250", "100.125.136.29"},  // Guangzhou
+	"cn-southwest-2": {"100.125.1.250", "100.125.129.250"}, // Guiyang-1
+	"ap-southeast-1": {"100.125.1.250", "100.125.3.250"},   // Hong Kong
+	"ap-southeast-2": {"100.125.1.250", "100.125.1.251"},   // Bangkok
+	"ap-southeast-3": {"100.125.1.250", "100.125.128.250"}, // Singapore
+	"af-south-1":     {"100.125.1.250", "100.125.1.14"},    // Johannesburg
+	"sa-brazil-1":    {"100.125.1.22", "100.125.1.90"},     // LA-Sao Paulo-1
+	"na-mexico-1":    {"100.125.1.22", "100.125.1.90"},     // LA-Mexico City-1
+	"la-north-2":     {"100.125.1.250", "100.125.1.242"},   // LA-Mexico City-2
+	"la-south-2":     {"100.125.1.250", "100.125.0.250"},   // LA-Santiago
+	"sa-chile-1":     {"100.125.1.250", "100.125.0.250"},   // LA-Santiago2
+}
+
 type StepCreateNetwork struct {
 	VpcID          string
 	Subnets        []string
@@ -77,7 +96,7 @@ func (s *StepCreateNetwork) Run(ctx context.Context, state multistep.StateBag) m
 		state.Put("vpc_id", vpcID)
 
 		ui.Say("Creating temporary subnet...")
-		subnetID, err := s.createSubnet(vpcClient, vpcID)
+		subnetID, err := s.createSubnet(vpcClient, vpcID, region)
 		if err != nil {
 			state.Put("error", err)
 			ui.Error(err.Error())
@@ -201,7 +220,7 @@ func (s *StepCreateNetwork) createVPC(client *vpc.VpcClient, conf *Config) (stri
 	return vpcID, nil
 }
 
-func (s *StepCreateNetwork) createSubnet(client *vpc.VpcClient, vpcID string) (string, error) {
+func (s *StepCreateNetwork) createSubnet(client *vpc.VpcClient, vpcID, region string) (string, error) {
 	subnetName := fmt.Sprintf("subnet-packer-%s", random.AlphaNumLower(6))
 	subnetOpts := model.CreateSubnetOption{
 		VpcId:     vpcID,
@@ -209,6 +228,11 @@ func (s *StepCreateNetwork) createSubnet(client *vpc.VpcClient, vpcID string) (s
 		Cidr:      "172.16.0.0/24",
 		GatewayIp: "172.16.0.1",
 	}
+
+	if dnsList, ok := defaultDNSList[region]; ok {
+		subnetOpts.DnsList = &dnsList
+	}
+
 	subnetRequest := &model.CreateSubnetRequest{
 		Body: &model.CreateSubnetRequestBody{
 			Subnet: &subnetOpts,
