@@ -1,3 +1,17 @@
+# CHANGELOG
+
+## 1.0.0 (December 21, 2022)
+
+* Support `enterprise_project_id` option [GH-57]
+* Support `data_disks` block and full-ECS image [GH-58]
+* Support `security_token` option [GH-61]
+* Add default DNS when creating subnet [GH-63]
+* the following options are not supported:
+  + *use_blockstorage_volume* and *force_delete* [GH-44]
+  + *networks* and *ports*  [GH-45]
+  + *image_min_disk* [GH-47]
+  + *volume_name* [GH-58]
+
 ## 0.4.0 (April 26, 2021)
 
 * support `packer init` command (#34)
