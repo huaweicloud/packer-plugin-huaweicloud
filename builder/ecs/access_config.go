@@ -47,7 +47,10 @@ type AccessConfig struct {
 	// The ID of the project to login with.
 	// If omitted, the HW_PROJECT_ID environment variable is used.
 	ProjectID string `mapstructure:"project_id" required:"false"`
-
+	// The security token to authenticate with a
+	// [temporary security credential](https://support.huaweicloud.com/intl/en-us/iam_faq/iam_01_0620.html).
+	// If omitted, the HW_SECURITY_TOKEN environment variable is used.
+	SecurityToken string `mapstructure:"security_token" required:"false"`
 	// The Identity authentication URL.
 	// If omitted, the HW_AUTH_URL environment variable is used.
 	// This is not required if you use HuaweiCloud.
@@ -76,6 +79,9 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		return []error{paraErr}
 	}
 
+	if c.SecurityToken == "" {
+		c.SecurityToken = os.Getenv("HW_SECURITY_TOKEN")
+	}
 	if c.ProjectID == "" {
 		c.ProjectID = os.Getenv("HW_PROJECT_ID")
 	}
@@ -123,9 +129,10 @@ func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, e
 	builder := core.NewHcHttpClientBuilder().WithEndpoint(endpoint).WithHttpConfig(buildHTTPConfig(c))
 
 	credentials := basic.Credentials{
-		AK:        c.AccessKey,
-		SK:        c.SecretKey,
-		ProjectId: c.ProjectID,
+		AK:            c.AccessKey,
+		SK:            c.SecretKey,
+		SecurityToken: c.SecurityToken,
+		ProjectId:     c.ProjectID,
 	}
 	builder.WithCredential(&credentials)
 
@@ -215,8 +222,9 @@ func (c *AccessConfig) getProjectID(region string) (string, error) {
 	builder := core.NewHcHttpClientBuilder().WithEndpoint(c.IdentityEndpoint).WithHttpConfig(buildHTTPConfig(c))
 
 	credentials := global.Credentials{
-		AK: c.AccessKey,
-		SK: c.SecretKey,
+		AK:            c.AccessKey,
+		SK:            c.SecretKey,
+		SecurityToken: c.SecurityToken,
 	}
 	builder.WithCredentialsType("global.Credentials").WithCredential(&credentials)
 
