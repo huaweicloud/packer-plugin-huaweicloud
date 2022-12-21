@@ -23,6 +23,7 @@ type FlatConfig struct {
 	Region                    *string           `mapstructure:"region" required:"true" cty:"region" hcl:"region"`
 	ProjectName               *string           `mapstructure:"project_name" required:"false" cty:"project_name" hcl:"project_name"`
 	ProjectID                 *string           `mapstructure:"project_id" required:"false" cty:"project_id" hcl:"project_id"`
+	SecurityToken             *string           `mapstructure:"security_token" required:"false" cty:"security_token" hcl:"security_token"`
 	IdentityEndpoint          *string           `mapstructure:"auth_url" required:"false" cty:"auth_url" hcl:"auth_url"`
 	Insecure                  *bool             `mapstructure:"insecure" required:"false" cty:"insecure" hcl:"insecure"`
 	ImageName                 *string           `mapstructure:"image_name" required:"true" cty:"image_name" hcl:"image_name"`
@@ -129,6 +130,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"region":                       &hcldec.AttrSpec{Name: "region", Type: cty.String, Required: false},
 		"project_name":                 &hcldec.AttrSpec{Name: "project_name", Type: cty.String, Required: false},
 		"project_id":                   &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
+		"security_token":               &hcldec.AttrSpec{Name: "security_token", Type: cty.String, Required: false},
 		"auth_url":                     &hcldec.AttrSpec{Name: "auth_url", Type: cty.String, Required: false},
 		"insecure":                     &hcldec.AttrSpec{Name: "insecure", Type: cty.Bool, Required: false},
 		"image_name":                   &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
