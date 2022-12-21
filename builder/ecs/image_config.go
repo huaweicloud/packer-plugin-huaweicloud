@@ -10,10 +10,12 @@ import (
 
 // ImageConfig is for common configuration related to creating Images.
 type ImageConfig struct {
-	// The name of the resulting image.
+	// The name of the packer image.
 	ImageName string `mapstructure:"image_name" required:"true"`
-	// Specifies the image description.
+	// The description of the packer image.
 	ImageDescription string `mapstructure:"image_description" required:"false"`
+	// The tags of the packer image in key/value format.
+	ImageTags map[string]string `mapstructure:"image_tags" required:"false"`
 	// List of members to add to the image after creation. An image member is
 	// usually a project (also called the "tenant") with whom the image is
 	// shared.
@@ -22,8 +24,6 @@ type ImageConfig struct {
 	// project. This requires a user with priveleges both in the build project and
 	// in the members provided. Defaults to false.
 	ImageAutoAcceptMembers bool `mapstructure:"image_auto_accept_members" required:"false"`
-	// The tags of the image in key/pair format.
-	ImageTags map[string]string `mapstructure:"image_tags" required:"false"`
 }
 
 func (c *ImageConfig) Prepare(ctx *interpolate.Context) []error {

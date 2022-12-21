@@ -19,8 +19,14 @@ import (
 // and details on how to access that launched image.
 type RunConfig struct {
 	Comm communicator.Config `mapstructure:",squash"`
-	// The ID or name for the desired flavor for the server to be created.
+	// The name for the desired flavor for the server to be created.
 	Flavor string `mapstructure:"flavor" required:"true"`
+	// The ID of Enterprise Project in which to create the image.
+	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
+	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
+	// The availability zone to launch the server in.
+	// If omitted, a random availability zone in the region will be used.
+	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
 	// The ID of the base image to use. This is the image that will
 	// be used to launch a new server and provision it. Unless you specify
 	// completely custom SSH settings, the source image must have cloud-init
@@ -34,7 +40,7 @@ type RunConfig struct {
 	// ``` json {
 	//     "source_image_filter": {
 	//         "filters": {
-	//             "name": "Ubuntu 18.04 server 64bit",
+	//             "name": "Ubuntu 20.04 server 64bit",
 	//             "visibility": "public",
 	//         },
 	//         "most_recent": true
@@ -42,34 +48,30 @@ type RunConfig struct {
 	// }
 	// ```
 	//
-	// This selects the most recent production Ubuntu 16.04 shared to you by
+	// This selects the most recent production Ubuntu 20.04 shared to you by
 	// the given owner. NOTE: This will fail unless *exactly* one image is
 	// returned, or `most_recent` is set to true. In the example of multiple
 	// returned images, `most_recent` will cause this to succeed by selecting
 	// the newest image of the returned images.
 	//
-	// -   `filters` (map of strings) - filters used to select a
-	// `source_image`.
+	//   - `filters` (ImageFilterOptions) - filters used to select a `source_image`.
 	//     NOTE: This will fail unless *exactly* one image is returned, or
 	//     `most_recent` is set to true.
 	//     The following filters are valid:
 	//
-	//     -   name (string)
-	//     -   owner (string)
-	//     -   visibility (string)
+	//     - name (string) - The image name. Exact matching is used.
+	//     - owner (string) - The owner to which the image belongs.
+	//     - visibility (string) - The visibility of the image. Available values include:
+	//       *public*, *private*, *market*, and *shared*.
 	//
-	// -   `most_recent` (boolean) - Selects the newest created image when
-	// true.
+	//   - `most_recent` (boolean) - Selects the newest created image when true.
 	//     This is most useful for selecting a daily distro build.
 	//
-	// You may set use this in place of `source_image` If `source_image_filter`
+	// You may set use this in place of `source_image` if `source_image_filter`
 	// is provided alongside `source_image`, the `source_image` will override
 	// the filter. The filter will not be used in this case.
 	SourceImageFilters ImageFilter `mapstructure:"source_image_filter" required:"false"`
-	// The availability zone to launch the server in.
-	// If omitted, a random availability zone in the region will be used.
-	AvailabilityZone string `mapstructure:"availability_zone" required:"false"`
-	// A specific floating IP to assign to this instance.
+	// A specific EIP ID to assign to this instance.
 	FloatingIP string `mapstructure:"floating_ip" required:"false"`
 	// Whether or not to attempt to reuse existing unassigned floating ips in
 	// the project before allocating a new one. Note that it is not possible to
@@ -78,9 +80,9 @@ type RunConfig struct {
 	// in the same project while packer is running, you should not set this to true.
 	// Defaults to false.
 	ReuseIPs bool `mapstructure:"reuse_ips" required:"false"`
-	// The type of eip. See the api doc to get the value.
+	// The type of EIP. See the api doc to get the value.
 	EIPType string `mapstructure:"eip_type" required:"false"`
-	// The size of eip bandwidth.
+	// The size of EIP bandwidth.
 	EIPBandwidthSize int `mapstructure:"eip_bandwidth_size" required:"false"`
 	// The IP version to use for SSH connections, valid values are `4` and `6`.
 	SSHIPVersion string `mapstructure:"ssh_ip_version" required:"false"`
@@ -108,10 +110,14 @@ type RunConfig struct {
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
-	// The ID of Enterprise Project in which to create the image.
-	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
-	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
 	// The system disk type of the instance. Defaults to `SSD`.
+	// For details about disk types, see
+	// [Disk Types and Disk Performance](https://support.huaweicloud.com/en-us/productdesc-evs/en-us_topic_0014580744.html).
+	// Available values include:
+	//   - `SAS`: high I/O disk type.
+	//   - `SSD`: ultra-high I/O disk type.
+	//   - `GPSSD`: general purpose SSD disk type.
+	//   - `ESSD`: Extreme SSD type.
 	VolumeType string `mapstructure:"volume_type" required:"false"`
 	// The system disk size in GB. If this parameter is not specified,
 	// it is set to the minimum value of the system disk in the source image.
@@ -133,6 +139,7 @@ type RunConfig struct {
 	// The data_disks allow for the following argument:
 	//   -  `volume_size` (int, required) - The data disk size in GB.
 	//   -  `volume_type` (string) - The data disk type of the instance. Defaults to `SSD`.
+	//       Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	DataVolumes []DataVolume `mapstructure:"data_disks" required:"false"`
 	// The ID of the vault to which the instance is to be added.
 	// This parameter is **mandatory** when creating a full-ECS image from the instance.
@@ -145,6 +152,7 @@ type DataVolume struct {
 	// The data disk size in GB.
 	Size int `mapstructure:"volume_size" required:"true"`
 	// The data disk type of the instance. Defaults to `SSD`.
+	// Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	Type string `mapstructure:"volume_type" required:"false"`
 }
 
