@@ -13,7 +13,9 @@ import (
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
 
-type stepCreateImage struct{}
+type stepCreateImage struct {
+	WaitTimeout string
+}
 
 func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
@@ -47,14 +49,25 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 
+	var waitTimeout time.Duration
+	if s.WaitTimeout == "" {
+		s.WaitTimeout = "30m"
+	}
+
+	waitTimeout, err = time.ParseDuration(s.WaitTimeout)
+	if err != nil {
+		log.Printf("[WARN] failed to parse `wait_image_ready_timeout` %s: %s", s.WaitTimeout, err)
+		waitTimeout = 30 * time.Minute
+	}
+
 	// Wait for the image to become available
-	ui.Say(fmt.Sprintf("Waiting for image %s to become available ...", config.ImageName))
+	ui.Say(fmt.Sprintf("Waiting for image %s to become available in %s ...", config.ImageName, waitTimeout))
 	stateConf := &StateChangeConf{
 		Pending:      []string{"INIT", "RUNNING"},
 		Target:       []string{"SUCCESS"},
 		Refresh:      getImsJobStatus(imsClient, jobID),
-		Timeout:      10 * time.Minute,
-		Delay:        10 * time.Second,
+		Timeout:      waitTimeout,
+		Delay:        60 * time.Second,
 		PollInterval: 10 * time.Second,
 		StateBag:     state,
 	}

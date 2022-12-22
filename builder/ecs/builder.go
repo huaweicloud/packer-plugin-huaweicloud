@@ -135,7 +135,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Comm: &b.config.RunConfig.Comm,
 		},
 		&StepStopServer{},
-		&stepCreateImage{},
+		&stepCreateImage{
+			WaitTimeout: b.config.WaitImageReadyTimeout,
+		},
 		&stepAddImageMembers{},
 	}
 

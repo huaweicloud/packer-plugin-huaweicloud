@@ -24,6 +24,10 @@ type ImageConfig struct {
 	// project. This requires a user with priveleges both in the build project and
 	// in the members provided. Defaults to false.
 	ImageAutoAcceptMembers bool `mapstructure:"image_auto_accept_members" required:"false"`
+	// Timeout of creating the image. The timeout string is a possibly signed sequence of
+	// decimal numbers, each with optional fraction and a unit suffix, such as "40m", "1.5h" or "2h30m".
+	// The default timeout is "30m" which means 30 minutes.
+	WaitImageReadyTimeout string `mapstructure:"wait_image_ready_timeout" required:"false"`
 }
 
 func (c *ImageConfig) Prepare(ctx *interpolate.Context) []error {
