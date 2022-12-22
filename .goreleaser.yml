@@ -15,13 +15,6 @@ builds:
   -
     id: plugin-check
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        # This will check plugin compatibility against latest version of Packer
-        - cmd: |
-            go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest &&
-            packer-plugins-check -load={{ .Name }}
-          dir: "{{ dir .Path}}"
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
