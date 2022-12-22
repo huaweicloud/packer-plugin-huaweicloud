@@ -2,6 +2,7 @@ NAME=huaweicloud
 BINARY=packer-plugin-${NAME}
 PLUGIN_DIR = ~/.packer.d/plugins
 PLUGIN_FILE = ${PLUGIN_DIR}/${BINARY}
+HASHICORP_PACKER_PLUGIN_SDK_VERSION?=$(shell go list -m github.com/hashicorp/packer-plugin-sdk | cut -d " " -f2)
 
 COUNT?=1
 TEST?=$(shell go list ./...)
@@ -37,15 +38,15 @@ testacc: install
 clean:
 	rm -rf ${BINARY} ${PLUGIN_FILE}
 
-install-gen-deps: ## Install dependencies for code generation
-	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+install-packer-sdc: ## Install packer sofware development command
+	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@${HASHICORP_PACKER_PLUGIN_SDK_VERSION}
 
-generate: ## install-gen-deps
-	# add $$GOPATH into $$PATH when failed
-	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+generate: install-packer-sdc
 	@go generate -v ./...
 
-ci-release-docs:
-	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+ci-release-docs: install-packer-sdc
 	@packer-sdc renderdocs -src docs -partials docs-partials/ -dst docs/
 	@/bin/sh -c "[ -d docs ] && zip -r docs.zip docs/"
+
+plugin-check: install-packer-sdc build
+	@packer-sdc plugin-check ${BINARY}
