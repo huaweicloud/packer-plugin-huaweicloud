@@ -3,6 +3,9 @@ package ecs
 import (
 	"fmt"
 	"log"
+	"strings"
+
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
@@ -42,11 +45,30 @@ func (a *Artifact) State(name string) interface{} {
 }
 
 func (a *Artifact) Destroy() error {
+	errors := make([]error, 0)
 	log.Printf("Destroying image: %s", a.ImageId)
 
-	request := model.GlanceDeleteImageRequest{
-		ImageId: a.ImageId,
+	for _, id := range strings.Split(a.ImageId, ";") {
+		if id == "" {
+			continue
+		}
+
+		request := model.GlanceDeleteImageRequest{
+			ImageId: id,
+		}
+		if _, err := a.Client.GlanceDeleteImage(&request); err != nil {
+			errors = append(errors, err)
+			continue
+		}
 	}
-	_, err := a.Client.GlanceDeleteImage(&request)
-	return err
+
+	if len(errors) > 0 {
+		if len(errors) == 1 {
+			return errors[0]
+		} else {
+			return &packer.MultiError{Errors: errors}
+		}
+	}
+
+	return nil
 }
