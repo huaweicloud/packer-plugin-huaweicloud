@@ -28,6 +28,7 @@ type FlatConfig struct {
 	Insecure                  *bool             `mapstructure:"insecure" required:"false" cty:"insecure" hcl:"insecure"`
 	ImageName                 *string           `mapstructure:"image_name" required:"true" cty:"image_name" hcl:"image_name"`
 	ImageDescription          *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
+	ImageType                 *string           `mapstructure:"image_type" required:"false" cty:"image_type" hcl:"image_type"`
 	ImageTags                 map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags" hcl:"image_tags"`
 	ImageMembers              []string          `mapstructure:"image_members" required:"false" cty:"image_members" hcl:"image_members"`
 	ImageAutoAcceptMembers    *bool             `mapstructure:"image_auto_accept_members" required:"false" cty:"image_auto_accept_members" hcl:"image_auto_accept_members"`
@@ -136,6 +137,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"insecure":                     &hcldec.AttrSpec{Name: "insecure", Type: cty.Bool, Required: false},
 		"image_name":                   &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_description":            &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"image_type":                   &hcldec.AttrSpec{Name: "image_type", Type: cty.String, Required: false},
 		"image_tags":                   &hcldec.AttrSpec{Name: "image_tags", Type: cty.Map(cty.String), Required: false},
 		"image_members":                &hcldec.AttrSpec{Name: "image_members", Type: cty.List(cty.String), Required: false},
 		"image_auto_accept_members":    &hcldec.AttrSpec{Name: "image_auto_accept_members", Type: cty.Bool, Required: false},

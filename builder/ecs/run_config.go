@@ -247,10 +247,6 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		c.EnterpriseProjectId = os.Getenv("HW_ENTERPRISE_PROJECT_ID")
 	}
 
-	if c.Vault == "" && len(c.DataVolumes) > 0 {
-		errs = append(errs, fmt.Errorf("vault_id is missing for Full-ECS image"))
-	}
-
 	for key, value := range c.InstanceMetadata {
 		if len(key) > 255 {
 			errs = append(errs, fmt.Errorf("Instance metadata key too long (max 255 bytes): %s", key))

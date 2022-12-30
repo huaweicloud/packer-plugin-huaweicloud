@@ -14,6 +14,9 @@ type ImageConfig struct {
 	ImageName string `mapstructure:"image_name" required:"true"`
 	// The description of the packer image.
 	ImageDescription string `mapstructure:"image_description" required:"false"`
+	// The type of the packer image. Available values include:
+	// *system*, *data-disk*, *full-ecs*.
+	ImageType string `mapstructure:"image_type" required:"false"`
 	// The tags of the packer image in key/value format.
 	ImageTags map[string]string `mapstructure:"image_tags" required:"false"`
 	// List of members to add to the image after creation. An image member is

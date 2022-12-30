@@ -17,7 +17,12 @@ import (
 )
 
 // The unique ID for this builder
-const BuilderId = "huawei.huaweicloud"
+const (
+	BuilderId       string = "huawei.huaweicloud"
+	SystemImageType        = "system"
+	DataImageType          = "data-disk"
+	FullImageType          = "full-ecs"
+)
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
@@ -52,6 +57,12 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 	errs = packer.MultiErrorAppend(errs, b.config.AccessConfig.Prepare(&b.config.ctx)...)
 	errs = packer.MultiErrorAppend(errs, b.config.ImageConfig.Prepare(&b.config.ctx)...)
 	errs = packer.MultiErrorAppend(errs, b.config.RunConfig.Prepare(&b.config.ctx)...)
+
+	if newImageType, err := calculateAndValidateImageType(b); err != nil {
+		errs = packer.MultiErrorAppend(errs, err)
+	} else {
+		b.config.ImageType = newImageType
+	}
 
 	if errs != nil && len(errs.Errors) > 0 {
 		return nil, nil, errs
@@ -163,4 +174,43 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	return artifact, nil
+}
+
+func calculateAndValidateImageType(b *Builder) (string, error) {
+	imageType := b.config.ImageType
+
+	// calculate image_type if not specified
+	if imageType == "" {
+		if len(b.config.DataVolumes) == 0 {
+			imageType = SystemImageType
+		} else {
+			if b.config.Vault == "" {
+				imageType = DataImageType
+			} else {
+				imageType = FullImageType
+			}
+		}
+	} else {
+		// validate image_type if specified
+		var validTypes = []string{SystemImageType, DataImageType, FullImageType}
+		if !isStringInSlice(imageType, validTypes) {
+			return imageType, fmt.Errorf("expected 'image_type' to be one of %v, got %s", validTypes, imageType)
+		}
+
+		if imageType == FullImageType && b.config.Vault == "" {
+			return imageType, fmt.Errorf("vault_id is missing for Full-ECS image")
+		}
+	}
+
+	return imageType, nil
+}
+
+func isStringInSlice(check string, valid []string) bool {
+	for _, str := range valid {
+		if check == str {
+			return true
+		}
+	}
+
+	return false
 }
