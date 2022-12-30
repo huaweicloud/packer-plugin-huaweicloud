@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.1 (December 30, 2022)
+
+* Support `image_type` option and support *data-disk* type image [GH-69]
+* Support *system-data* type image [GH-70]
+
 ## 1.0.0 (December 21, 2022)
 
 * Support `enterprise_project_id` option [GH-57]
