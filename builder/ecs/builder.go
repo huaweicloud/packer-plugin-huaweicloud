@@ -18,10 +18,11 @@ import (
 
 // The unique ID for this builder
 const (
-	BuilderId       string = "huawei.huaweicloud"
-	SystemImageType        = "system"
-	DataImageType          = "data-disk"
-	FullImageType          = "full-ecs"
+	BuilderId           string = "huawei.huaweicloud"
+	SystemImageType            = "system"      // system image only
+	DataImageType              = "data-disk"   // data disk images only
+	SystemDataImageType        = "system-data" // system image and data disk images
+	FullImageType              = "full-ecs"    // Full-ECS image, need vault_id
 )
 
 type Config struct {
@@ -192,7 +193,7 @@ func calculateAndValidateImageType(b *Builder) (string, error) {
 		}
 	} else {
 		// validate image_type if specified
-		var validTypes = []string{SystemImageType, DataImageType, FullImageType}
+		var validTypes = []string{SystemImageType, DataImageType, SystemDataImageType, FullImageType}
 		if !isStringInSlice(imageType, validTypes) {
 			return imageType, fmt.Errorf("expected 'image_type' to be one of %v, got %s", validTypes, imageType)
 		}

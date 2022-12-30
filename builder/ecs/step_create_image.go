@@ -52,8 +52,10 @@ func (s *stepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		imageID, err = createServerWholeImage(ui, config, waitTimeout, imsClient, serverID)
 	case DataImageType:
 		imageID, err = createDataDiskImage(ui, config, waitTimeout, imsClient, serverID)
+	case SystemDataImageType:
+		imageID, err = createSystemDataDiskImage(ui, config, waitTimeout, imsClient, serverID)
 	default:
-		imageID, err = CreateSystemImage(ui, config, waitTimeout, imsClient, serverID)
+		imageID, err = createSystemImage(ui, config, waitTimeout, imsClient, serverID)
 	}
 
 	if err != nil {
@@ -90,7 +92,7 @@ func buildImageTag(conf *Config) []model.TagKeyValue {
 	return taglist
 }
 
-func CreateSystemImage(_ packer.Ui, conf *Config, timeout time.Duration, client *ims.ImsClient, serverID string) (string, error) {
+func createSystemImage(_ packer.Ui, conf *Config, timeout time.Duration, client *ims.ImsClient, serverID string) (string, error) {
 	requestBody := model.CreateImageRequestBody{
 		Name:        conf.ImageName,
 		Description: &conf.ImageDescription,
@@ -244,6 +246,22 @@ func createDataDiskImage(ui packer.Ui, conf *Config, timeout time.Duration, clie
 		return allImages[1:], nil
 	}
 	return allImages, fmt.Errorf("all jobs are failed to create data disk image")
+}
+
+func createSystemDataDiskImage(ui packer.Ui, conf *Config, timeout time.Duration, client *ims.ImsClient, serverID string) (string, error) {
+	ui.Message(fmt.Sprintf("creating system image ..."))
+	sysImageID, err := createSystemImage(ui, conf, timeout, client, serverID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create system image: %s", err)
+	}
+	ui.Message(fmt.Sprintf("system image: %s", sysImageID))
+
+	dataImageID, err := createDataDiskImage(ui, conf, timeout, client, serverID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create data disk image: %s", err)
+	}
+
+	return fmt.Sprintf("%s;%s", sysImageID, dataImageID), nil
 }
 
 func waitImageJobSuccess(client *ims.ImsClient, timeout time.Duration, jobID string) (string, error) {
