@@ -54,12 +54,6 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		return multistep.ActionHalt
 	}
 
-	dataVolumes, err := buildDataVolumes(config)
-	if err != nil {
-		state.Put("error", err)
-		return multistep.ActionHalt
-	}
-
 	userData := s.UserData
 	if s.UserDataFile != "" {
 		rawData, err := ioutil.ReadFile(s.UserDataFile)
@@ -89,9 +83,6 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		Metadata:         s.InstanceMetadata,
 	}
 
-	if dataVolumes != nil {
-		serverbody.DataVolumes = &dataVolumes
-	}
 	if config.EnterpriseProjectId != "" {
 		serverbody.Extendparam = &model.PostPaidServerExtendParam{
 			EnterpriseProjectId: &config.EnterpriseProjectId,
@@ -188,6 +179,7 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
+	detachVolumeIds := state.Get("attach_volume_ids").([]string)
 
 	region := config.Region
 	ecsClient, err := config.HcEcsClient(region)
@@ -197,6 +189,13 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	}
 
 	serverID := s.serverID
+	ui.Say(fmt.Sprintf("Detacheing the volume..."))
+	err = detachServerVolume(ui, state, ecsClient, serverID, detachVolumeIds)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error detaching volume from server: %s", err))
+		return
+	}
+
 	ui.Say(fmt.Sprintf("Terminating the source server: %s...", serverID))
 
 	serversbody := []model.ServerId{
@@ -229,6 +228,29 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	stateChange.WaitForState()
 }
 
+func detachServerVolume(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, detachVolumeIds []string) error {
+	request := &model.DetachServerVolumeRequest{
+		ServerId: serverId,
+	}
+	for _, detachVolumeId := range detachVolumeIds {
+		request.VolumeId = detachVolumeId
+		response, err := ecsClient.DetachServerVolume(request)
+		if err != nil {
+			return fmt.Errorf("error detach volume %s from ECS: %s", detachVolumeId, err)
+		}
+
+		var jobID string
+		if response.JobId != nil {
+			jobID = *response.JobId
+		}
+		_, err = WaitForDetachVolumeJobSuccess(ui, state, ecsClient, jobID)
+		if err != nil {
+			return fmt.Errorf("error detach volume %s from ECS: %s", detachVolumeId, err)
+		}
+	}
+	return nil
+}
+
 func WaitForServerJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs.EcsClient, jobID string) (*model.ShowJobResponse, error) {
 	ui.Message("Waiting for server to become ready...")
 	stateChange := StateChangeConf{
@@ -243,6 +265,27 @@ func WaitForServerJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs
 	serverJob, err := stateChange.WaitForState()
 	if err != nil {
 		err = fmt.Errorf("Error waiting for server (%s) to become ready: %s", jobID, err)
+		ui.Error(err.Error())
+		return nil, err
+	}
+
+	return serverJob.(*model.ShowJobResponse), nil
+}
+
+func WaitForDetachVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs.EcsClient, jobID string) (*model.ShowJobResponse, error) {
+	ui.Message("Waiting for detach volume from ECS success...")
+	stateChange := StateChangeConf{
+		Pending:      []string{"RUNNING"},
+		Target:       []string{"SUCCESS", "NOTFOUND"},
+		Refresh:      serverJobStateRefreshFunc(client, jobID),
+		Timeout:      10 * time.Minute,
+		Delay:        10 * time.Second,
+		PollInterval: 10 * time.Second,
+		StateBag:     state,
+	}
+	serverJob, err := stateChange.WaitForState()
+	if err != nil {
+		err = fmt.Errorf("error waiting for volume (%s) to become ready: %s", jobID, err)
 		ui.Error(err.Error())
 		return nil, err
 	}
@@ -320,28 +363,4 @@ func (s *StepRunSourceServer) buildRootVolume() (*model.PostPaidServerRootVolume
 	}
 
 	return &rootVolume, nil
-}
-
-func buildDataVolumes(conf *Config) ([]model.PostPaidServerDataVolume, error) {
-	if len(conf.DataVolumes) == 0 {
-		return nil, nil
-	}
-
-	dataVolumes := make([]model.PostPaidServerDataVolume, len(conf.DataVolumes))
-	for i, volume := range conf.DataVolumes {
-		if volume.Type == "" {
-			volume.Type = "SSD"
-		}
-		var volumeType model.PostPaidServerDataVolumeVolumetype
-		err := volumeType.UnmarshalJSON([]byte(volume.Type))
-		if err != nil {
-			return nil, fmt.Errorf("Error parsing the data volume type %s: %s", volume.Type, err)
-		}
-
-		dataVolumes[i] = model.PostPaidServerDataVolume{
-			Volumetype: volumeType,
-			Size:       int32(volume.Size),
-		}
-	}
-	return dataVolumes, nil
 }

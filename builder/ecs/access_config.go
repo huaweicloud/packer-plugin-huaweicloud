@@ -18,6 +18,7 @@ import (
 
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
 	eip "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v2"
+	evs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/evs/v2"
 	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	ims "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2"
@@ -216,6 +217,16 @@ func (c *AccessConfig) HcEipClient(region string) (*eip.EipClient, error) {
 	}
 
 	return eip.NewEipClient(hcClient), nil
+}
+
+// HcEvsClient is the EVS service client using huaweicloud-sdk-go-v3 package
+func (c *AccessConfig) HcEvsClient(region string) (*evs.EvsClient, error) {
+	hcClient, err := NewHcClient(c, region, "evs")
+	if err != nil {
+		return nil, err
+	}
+
+	return evs.NewEvsClient(hcClient), nil
 }
 
 func (c *AccessConfig) getProjectID(region string) (string, error) {

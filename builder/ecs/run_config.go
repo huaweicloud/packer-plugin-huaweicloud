@@ -149,8 +149,17 @@ type RunConfig struct {
 }
 
 type DataVolume struct {
-	// The data disk size in GB.
-	Size int `mapstructure:"volume_size" required:"true"`
+	// Only one of the four parameters of Size, DataImageId, SnapshotId, VolumeId can be selected at most.
+	Size int `mapstructure:"volume_size" required:"false"`
+	// The ID of the image.
+	// Only one of the four parameters of Size, DataImageId, SnapshotId, VolumeId can be selected at most.
+	DataImageId string `mapstructure:"data_image_id" required:"false"`
+	// The ID of the snapshot.
+	// Only one of the four parameters of Size, DataImageId, SnapshotId, VolumeId can be selected at most.
+	SnapshotId string `mapstructure:"snapshot_id" required:"false"`
+	// The ID of the volume.
+	// Only one of the four parameters of Size, DataImageId, SnapshotId, VolumeId can be selected at most.
+	VolumeId string `mapstructure:"volume_id" required:"false"`
 	// The data disk type of the instance. Defaults to `SSD`.
 	// Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	Type string `mapstructure:"volume_type" required:"false"`
