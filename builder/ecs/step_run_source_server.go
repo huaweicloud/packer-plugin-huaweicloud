@@ -179,7 +179,7 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
-	detachVolumeIds := state.Get("attach_volume_ids").([]string)
+	detachVolumeIds := state.Get("attach_volume_ids")
 
 	region := config.Region
 	ecsClient, err := config.HcEcsClient(region)
@@ -189,7 +189,6 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	}
 
 	serverID := s.serverID
-	ui.Say(fmt.Sprintf("Detacheing the volume..."))
 	err = detachServerVolume(ui, state, ecsClient, serverID, detachVolumeIds)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error detaching volume from server: %s", err))
@@ -228,11 +227,16 @@ func (s *StepRunSourceServer) Cleanup(state multistep.StateBag) {
 	stateChange.WaitForState()
 }
 
-func detachServerVolume(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, detachVolumeIds []string) error {
+func detachServerVolume(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, detachVolumeIds interface{}) error {
+	ui.Say(fmt.Sprintf("Detacheing the volume..."))
+	if detachVolumeIds == nil {
+		return nil
+	}
+	detachIds := detachVolumeIds.([]string)
 	request := &model.DetachServerVolumeRequest{
 		ServerId: serverId,
 	}
-	for _, detachVolumeId := range detachVolumeIds {
+	for _, detachVolumeId := range detachIds {
 		request.VolumeId = detachVolumeId
 		response, err := ecsClient.DetachServerVolume(request)
 		if err != nil {

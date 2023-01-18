@@ -3,6 +3,7 @@ package ecs
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -28,7 +29,6 @@ const (
 
 type StepAttachVolume struct {
 	DataVolumes []DataVolume
-	Config      *Config
 }
 
 type DataVolumeWrap struct {
@@ -39,6 +39,10 @@ type DataVolumeWrap struct {
 func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
+
+	if len(s.DataVolumes) == 0 {
+		return multistep.ActionContinue
+	}
 
 	var dataVolumeWraps []DataVolumeWrap
 	var err error
@@ -71,10 +75,9 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 	serverId := state.Get("server_id").(string)
 	attachVolumeIds := make([]string, 0)
 	for _, dataVolumeWrap := range dataVolumeWraps {
-		state.Put("attach_volume_ids", attachVolumeIds)
 		switch dataVolumeWrap.dataType {
 		case VolumeId:
-			err = attachVolume(ui, state, ecsClient, serverId, dataVolumeWrap.DataVolume)
+			err = attachDataVolumes(ui, state, ecsClient, serverId, dataVolumeWrap.DataVolume)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
@@ -99,6 +102,7 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 				return multistep.ActionHalt
 			}
 		}
+		state.Put("attach_volume_ids", attachVolumeIds)
 	}
 	return multistep.ActionContinue
 }
@@ -115,19 +119,19 @@ func parseDataVolumes(dataVolumes []DataVolume) ([]DataVolumeWrap, error) {
 		}
 		if dataVolume.VolumeId != "" {
 			specified = append(specified, "volume_id")
-			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{dataVolume, VolumeId})
+			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{DataVolume: dataVolume, dataType: VolumeId})
 		}
 		if dataVolume.Size > 0 {
 			specified = append(specified, "volume_size")
-			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{dataVolume, Size})
+			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{DataVolume: dataVolume, dataType: Size})
 		}
 		if dataVolume.DataImageId != "" {
 			specified = append(specified, "data_image_id")
-			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{dataVolume, DataImageId})
+			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{DataVolume: dataVolume, dataType: DataImageId})
 		}
 		if dataVolume.SnapshotId != "" {
 			specified = append(specified, "snapshot_id")
-			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{dataVolume, SnapshotId})
+			dataVolumeWraps = append(dataVolumeWraps, DataVolumeWrap{DataVolume: dataVolume, dataType: SnapshotId})
 		}
 		if len(specified) == 0 {
 			return nil, fmt.Errorf("one of volume_id, volume_size, data_image_id, snapshot_id must be specified")
@@ -140,7 +144,7 @@ func parseDataVolumes(dataVolumes []DataVolume) ([]DataVolumeWrap, error) {
 	return dataVolumeWraps, nil
 }
 
-func attachVolume(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, dataVolume DataVolume) error {
+func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, dataVolume DataVolume) error {
 	ui.Say(fmt.Sprintf("Attaching volume to ECS..."))
 	serverBody := &ecsmodel.AttachServerVolumeOption{
 		VolumeId: dataVolume.VolumeId,
@@ -169,8 +173,9 @@ func attachVolume(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClie
 	return nil
 }
 
-func createVolumeByImageId(ui packer.Ui, state multistep.StateBag, imsClient *ims.ImsClient, evsClient *evs.EvsClient, serverId string, dataVolume DataVolume) error {
-	ui.Say(fmt.Sprintf("Getting volume size by data image id..."))
+func createVolumeByImageId(ui packer.Ui, state multistep.StateBag, imsClient *ims.ImsClient, evsClient *evs.EvsClient,
+	serverId string, dataVolume DataVolume) error {
+	log.Printf("[DEBUG] Getting volume size by data image id: %s", dataVolume.DataImageId)
 
 	request := &imsmodel.GlanceShowImageRequest{
 		ImageId: dataVolume.DataImageId,
@@ -183,8 +188,9 @@ func createVolumeByImageId(ui packer.Ui, state multistep.StateBag, imsClient *im
 	return createVolume(ui, state, evsClient, serverId, dataVolume)
 }
 
-func createVolumeBySnapshotId(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId string, dataVolume DataVolume) error {
-	ui.Say(fmt.Sprintf("Getting volume size by snapshot id..."))
+func createVolumeBySnapshotId(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId string,
+	dataVolume DataVolume) error {
+	log.Printf("[DEBUG] Getting volume size by snapshot id: %s", dataVolume.SnapshotId)
 
 	request := &evsmodel.ShowSnapshotRequest{
 		SnapshotId: dataVolume.SnapshotId,
