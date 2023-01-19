@@ -123,12 +123,30 @@ type RunConfig struct {
 	// it is set to the minimum value of the system disk in the source image.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
 	// Add one or more data disks to the instance before creating the image.
+	// Only one of the four parameters of *volume_size*, *data_image_id*, *snapshot_id*, *volume_id*
+	// can be selected at most.
+	// If there is data disk that the value of *volume_id* or *snapshot_id* is not empty, the param of
+	// *availability_zone* should be set and keep consistent with the data disk availability_zone.
+	// If there are multiple data disks that the value of *volume_id* or *snapshot_id* is not empty, the data
+	// disks should in the same availability_zone.
 	// Usage example:
 	//
 	// ``` json {
 	//   "data_disks": [
 	//     {
 	//       "volume_size": 100,
+	//       "volume_type": "GPSSD"
+	//     },
+	//     {
+	//       "data_image_id": "1cc1ccdd-7ef1-43b0-a8ea-c80ecf2f5da2",
+	//       "volume_type": "GPSSD"
+	//     },
+	//     {
+	//       "snapshot_id": "2f8a6e39-29d0-4fb9-9d7f-174e22ffa478",
+	//       "volume_type": "GPSSD"
+	//     },
+	//     {
+	//       "volume_id": "d2c9b3fd-7a72-4374-9502-00e8740bedbd",
 	//       "volume_type": "GPSSD"
 	//     }
 	//   ],
@@ -137,7 +155,10 @@ type RunConfig struct {
 	// ```
 	//
 	// The data_disks allow for the following argument:
-	//   -  `volume_size` (int, required) - The data disk size in GB.
+	//   -  `volume_size` (int) - The data disk size in GB.
+	//   -  `data_image_id` (string) - The ID of the data disk image.
+	//   -  `snapshot_id` (string) - The ID of the snapshot.
+	//   -  `volume_id` (string) - The ID of an existing volume.
 	//   -  `volume_type` (string) - The data disk type of the instance. Defaults to `SSD`.
 	//       Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	DataVolumes []DataVolume `mapstructure:"data_disks" required:"false"`
@@ -150,7 +171,13 @@ type RunConfig struct {
 
 type DataVolume struct {
 	// The data disk size in GB.
-	Size int `mapstructure:"volume_size" required:"true"`
+	Size int `mapstructure:"volume_size" required:"false"`
+	// The ID of the data disk image.
+	DataImageId string `mapstructure:"data_image_id" required:"false"`
+	// The ID of the snapshot.
+	SnapshotId string `mapstructure:"snapshot_id" required:"false"`
+	// The ID of an existing volume.
+	VolumeId string `mapstructure:"volume_id" required:"false"`
 	// The data disk type of the instance. Defaults to `SSD`.
 	// Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	Type string `mapstructure:"volume_type" required:"false"`

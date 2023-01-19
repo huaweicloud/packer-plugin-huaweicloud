@@ -133,6 +133,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			ConfigDrive:      b.config.ConfigDrive,
 			InstanceMetadata: b.config.InstanceMetadata,
 		},
+		&StepAttachVolume{
+			DataVolumes: b.config.DataVolumes,
+		},
 		&StepGetPassword{
 			Debug: b.config.PackerDebug,
 			Comm:  &b.config.RunConfig.Comm,

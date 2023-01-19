@@ -10,8 +10,11 @@ import (
 // FlatDataVolume is an auto-generated flat version of DataVolume.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatDataVolume struct {
-	Size *int    `mapstructure:"volume_size" required:"true" cty:"volume_size" hcl:"volume_size"`
-	Type *string `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
+	Size        *int    `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
+	DataImageId *string `mapstructure:"data_image_id" required:"false" cty:"data_image_id" hcl:"data_image_id"`
+	SnapshotId  *string `mapstructure:"snapshot_id" required:"false" cty:"snapshot_id" hcl:"snapshot_id"`
+	VolumeId    *string `mapstructure:"volume_id" required:"false" cty:"volume_id" hcl:"volume_id"`
+	Type        *string `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 }
 
 // FlatMapstructure returns a new FlatDataVolume.
@@ -26,8 +29,11 @@ func (*DataVolume) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Sp
 // The decoded values from this spec will then be applied to a FlatDataVolume.
 func (*FlatDataVolume) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"volume_size": &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
-		"volume_type": &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
+		"volume_size":   &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
+		"data_image_id": &hcldec.AttrSpec{Name: "data_image_id", Type: cty.String, Required: false},
+		"snapshot_id":   &hcldec.AttrSpec{Name: "snapshot_id", Type: cty.String, Required: false},
+		"volume_id":     &hcldec.AttrSpec{Name: "volume_id", Type: cty.String, Required: false},
+		"volume_type":   &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 	}
 	return s
 }

@@ -25,6 +25,9 @@ var serviceEndpoints = map[string]ServiceCatalog{
 	"eip": {
 		Name: "vpc",
 	},
+	"evs": {
+		Name: "evs",
+	},
 }
 
 // GetServiceEndpoint try to get the endpoint from customizing map
