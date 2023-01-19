@@ -29,6 +29,7 @@ const (
 
 type StepAttachVolume struct {
 	DataVolumes []DataVolume
+	PrefixName  string
 }
 
 type DataVolumeWrap struct {
@@ -74,6 +75,7 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 
 	serverId := state.Get("server_id").(string)
 	attachVolumeIds := make([]string, 0)
+	index := 1
 	for _, dataVolumeWrap := range dataVolumeWraps {
 		switch dataVolumeWrap.dataType {
 		case VolumeId:
@@ -84,23 +86,28 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 			}
 			attachVolumeIds = append(attachVolumeIds, dataVolumeWrap.VolumeId)
 		case Size:
-			err = createVolume(ui, state, evsClient, serverId, dataVolumeWrap.DataVolume)
+			err = createVolume(ui, state, evsClient, serverId, s.generateVolumeName(index), dataVolumeWrap.DataVolume)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
 			}
+			index++
 		case DataImageId:
-			err = createVolumeByImageId(ui, state, imsClient, evsClient, serverId, dataVolumeWrap.DataVolume)
+			err = createVolumeByImageId(ui, state, imsClient, evsClient, serverId, s.generateVolumeName(index),
+				dataVolumeWrap.DataVolume)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
 			}
+			index++
 		case SnapshotId:
-			err = createVolumeBySnapshotId(ui, state, evsClient, serverId, dataVolumeWrap.DataVolume)
+			err = createVolumeBySnapshotId(ui, state, evsClient, serverId, s.generateVolumeName(index),
+				dataVolumeWrap.DataVolume)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
 			}
+			index++
 		}
 		state.Put("attach_volume_ids", attachVolumeIds)
 	}
@@ -108,6 +115,10 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 }
 
 func (s *StepAttachVolume) Cleanup(state multistep.StateBag) {
+}
+
+func (s *StepAttachVolume) generateVolumeName(index int) string {
+	return fmt.Sprintf("%s-volume-%04d", s.PrefixName, index)
 }
 
 func parseDataVolumes(dataVolumes []DataVolume) ([]DataVolumeWrap, error) {
@@ -174,7 +185,7 @@ func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.Ec
 }
 
 func createVolumeByImageId(ui packer.Ui, state multistep.StateBag, imsClient *ims.ImsClient, evsClient *evs.EvsClient,
-	serverId string, dataVolume DataVolume) error {
+	serverId, name string, dataVolume DataVolume) error {
 	log.Printf("[DEBUG] Getting volume size by data image id: %s", dataVolume.DataImageId)
 
 	request := &imsmodel.GlanceShowImageRequest{
@@ -185,10 +196,10 @@ func createVolumeByImageId(ui packer.Ui, state multistep.StateBag, imsClient *im
 		return err
 	}
 	dataVolume.Size = int(*response.MinDisk)
-	return createVolume(ui, state, evsClient, serverId, dataVolume)
+	return createVolume(ui, state, evsClient, serverId, name, dataVolume)
 }
 
-func createVolumeBySnapshotId(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId string,
+func createVolumeBySnapshotId(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId, name string,
 	dataVolume DataVolume) error {
 	log.Printf("[DEBUG] Getting volume size by snapshot id: %s", dataVolume.SnapshotId)
 
@@ -200,10 +211,11 @@ func createVolumeBySnapshotId(ui packer.Ui, state multistep.StateBag, evsClient 
 		return err
 	}
 	dataVolume.Size = int(*response.Snapshot.Size)
-	return createVolume(ui, state, evsClient, serverId, dataVolume)
+	return createVolume(ui, state, evsClient, serverId, name, dataVolume)
 }
 
-func createVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId string, dataVolume DataVolume) error {
+func createVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId, name string,
+	dataVolume DataVolume) error {
 	ui.Say(fmt.Sprintf("Creating volume..."))
 
 	config := state.Get("config").(*Config)
@@ -217,6 +229,7 @@ func createVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClie
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volumeType,
 		Size:             int32(dataVolume.Size),
+		Name:             &name,
 	}
 	if config.EnterpriseProjectId != "" {
 		serverBody.EnterpriseProjectId = &config.EnterpriseProjectId

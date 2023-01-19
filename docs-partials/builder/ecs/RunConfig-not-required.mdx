@@ -104,9 +104,10 @@
 - `data_disks` ([]DataVolume) - Add one or more data disks to the instance before creating the image.
   Only one of the four parameters of *volume_size*, *data_image_id*, *snapshot_id*, *volume_id*
   can be selected at most.
-  If there is data disk that the value of *volume_id* is not empty, the param of *availability_zone* should
-  be set and keep consistent with the data disk availability_zone. If there are multiple data disks that the
-  value of *volume_id* is not empty, the data disks should in the same availability_zone.
+  If there is data disk that the value of *volume_id* or *snapshot_id* is not empty, the param of
+  *availability_zone* should be set and keep consistent with the data disk availability_zone.
+  If there are multiple data disks that the value of *volume_id* or *snapshot_id* is not empty, the data
+  disks should in the same availability_zone.
   Usage example:
   
   ``` json {
