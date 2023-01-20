@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.2 (January 20, 2023)
+
+* Support creating data volumes with `volume_id`, `snapshot_id` and `data_image_id` [GH-71]
+
 ## 1.0.1 (December 30, 2022)
 
 * Support `image_type` option and support *data-disk* type image [GH-69]
