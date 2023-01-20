@@ -99,6 +99,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepLoadFlavor{
 			Flavor: b.config.Flavor,
 		},
+		&StepCheckVolumes{
+			DataVolumes: b.config.DataVolumes,
+		},
 		&StepKeyPair{
 			Debug:        b.config.PackerDebug,
 			Comm:         &b.config.Comm,
