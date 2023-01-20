@@ -137,8 +137,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			InstanceMetadata: b.config.InstanceMetadata,
 		},
 		&StepAttachVolume{
-			DataVolumes: b.config.DataVolumes,
-			PrefixName:  b.config.InstanceName,
+			PrefixName: b.config.InstanceName,
 		},
 		&StepGetPassword{
 			Debug: b.config.PackerDebug,
