@@ -30,7 +30,9 @@ type StepCheckVolumes struct {
 
 type DataVolumeWrap struct {
 	DataVolume
-	dataType DataVolumeType
+	dataType   DataVolumeType
+	volumeName string
+	serverId   string
 }
 
 func (s *StepCheckVolumes) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {

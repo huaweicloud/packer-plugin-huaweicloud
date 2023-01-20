@@ -27,7 +27,6 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 		return multistep.ActionContinue
 	}
 
-	dataVolumeWraps := dataVolumes.([]DataVolumeWrap)
 	region := config.Region
 	ecsClient, err := config.HcEcsClient(region)
 	if err != nil {
@@ -42,25 +41,39 @@ func (s *StepAttachVolume) Run(ctx context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
-	serverId := state.Get("server_id").(string)
 	attachVolumeIds := make([]string, 0)
+	serverId := state.Get("server_id").(string)
 	index := 1
+
+	dataVolumeWraps := dataVolumes.([]DataVolumeWrap)
 	for _, dataVolumeWrap := range dataVolumeWraps {
 		switch dataVolumeWrap.dataType {
 		case VolumeId:
-			err = attachDataVolumes(ui, state, ecsClient, serverId, dataVolumeWrap.DataVolume)
+			volumeId := dataVolumeWrap.VolumeId
+			ui.Say(fmt.Sprintf("Attaching volume %s to ECS...", volumeId))
+
+			dataVolumeWrap.serverId = serverId
+			err = attachDataVolumes(ui, state, ecsClient, dataVolumeWrap)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
 			}
-			attachVolumeIds = append(attachVolumeIds, dataVolumeWrap.VolumeId)
+
+			ui.Message(fmt.Sprintf("Attached volume %s to ECS", volumeId))
+			attachVolumeIds = append(attachVolumeIds, volumeId)
 		case Size, DataImageId, SnapshotId:
 			volumeName := s.generateVolumeName(index)
-			err = createVolume(ui, state, evsClient, serverId, volumeName, dataVolumeWrap.DataVolume)
+			ui.Say(fmt.Sprintf("Creating and attaching %s...", volumeName))
+
+			dataVolumeWrap.serverId = serverId
+			dataVolumeWrap.volumeName = volumeName
+			err = createAndAttachVolume(ui, state, evsClient, dataVolumeWrap, index)
 			if err != nil {
 				state.Put("error", err)
 				return multistep.ActionHalt
 			}
+
+			ui.Message(fmt.Sprintf("Attached volume %s to ECS", volumeName))
 			index++
 		}
 		state.Put("attach_volume_ids", attachVolumeIds)
@@ -75,13 +88,13 @@ func (s *StepAttachVolume) generateVolumeName(index int) string {
 	return fmt.Sprintf("%s-volume-%04d", s.PrefixName, index)
 }
 
-func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, serverId string, dataVolume DataVolume) error {
-	ui.Say(fmt.Sprintf("Attaching volume to ECS..."))
+func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, disk DataVolumeWrap) error {
+	volumeId := disk.VolumeId
 	serverBody := &ecsmodel.AttachServerVolumeOption{
-		VolumeId: dataVolume.VolumeId,
+		VolumeId: volumeId,
 	}
 	request := &ecsmodel.AttachServerVolumeRequest{
-		ServerId: serverId,
+		ServerId: disk.serverId,
 		Body: &ecsmodel.AttachServerVolumeRequestBody{
 			VolumeAttachment: serverBody,
 		},
@@ -92,53 +105,50 @@ func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.Ec
 	}
 
 	var jobID string
-
 	if response.JobId != nil {
 		jobID = *response.JobId
 	}
 
-	_, err = WaitForAttachVolumeJobSuccess(ui, state, ecsClient, jobID)
+	_, err = waitForAttachVolumeJobSuccess(ui, state, ecsClient, jobID)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func createVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, serverId, name string,
-	dataVolume DataVolume) error {
-	ui.Say(fmt.Sprintf("Creating volume..."))
-
+func createAndAttachVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClient, disk DataVolumeWrap, index int) error {
 	config := state.Get("config").(*Config)
 	availabilityZone := state.Get("availability_zone").(string)
 
-	if dataVolume.Type == "" {
-		dataVolume.Type = "SSD"
+	if disk.Type == "" {
+		disk.Type = "SSD"
 	}
 	var volumeType evsmodel.CreateVolumeOptionVolumeType
-	err := volumeType.UnmarshalJSON([]byte(dataVolume.Type))
+	err := volumeType.UnmarshalJSON([]byte(disk.Type))
 	if err != nil {
-		return fmt.Errorf("error parsing the data volume type %s: %s", dataVolume.Type, err)
+		return fmt.Errorf("error parsing the data volume type %s: %s", disk.Type, err)
 	}
 
 	serverBody := &evsmodel.CreateVolumeOption{
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volumeType,
-		Size:             int32(dataVolume.Size),
-		Name:             &name,
+		Size:             int32(disk.Size),
+		Name:             &disk.volumeName,
 	}
 	if config.EnterpriseProjectId != "" {
 		serverBody.EnterpriseProjectId = &config.EnterpriseProjectId
 	}
-	if dataVolume.DataImageId != "" {
-		serverBody.ImageRef = &dataVolume.DataImageId
+	if disk.DataImageId != "" {
+		serverBody.ImageRef = &disk.DataImageId
 	}
-	if dataVolume.SnapshotId != "" {
-		serverBody.SnapshotId = &dataVolume.SnapshotId
+	if disk.SnapshotId != "" {
+		serverBody.SnapshotId = &disk.SnapshotId
 	}
 	request := &evsmodel.CreateVolumeRequest{
 		Body: &evsmodel.CreateVolumeRequestBody{
 			Volume:   serverBody,
-			ServerId: &serverId,
+			ServerId: &disk.serverId,
 		},
 	}
 	response, err := evsClient.CreateVolume(request)
@@ -147,19 +157,18 @@ func createVolume(ui packer.Ui, state multistep.StateBag, evsClient *evs.EvsClie
 	}
 
 	var jobID string
-
 	if response.JobId != nil {
 		jobID = *response.JobId
 	}
 
-	_, err = WaitForCreateVolumeJobSuccess(ui, state, evsClient, jobID)
+	_, err = waitForCreateVolumeJobSuccess(ui, state, evsClient, jobID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func WaitForAttachVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs.EcsClient, jobID string) (*ecsmodel.ShowJobResponse, error) {
+func waitForAttachVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *ecs.EcsClient, jobID string) (*ecsmodel.ShowJobResponse, error) {
 	ui.Message("Waiting for attach volume to ECS success...")
 	stateChange := StateChangeConf{
 		Pending:      []string{"INIT", "RUNNING"},
@@ -180,7 +189,7 @@ func WaitForAttachVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, clien
 	return serverJob.(*ecsmodel.ShowJobResponse), nil
 }
 
-func WaitForCreateVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *evs.EvsClient, jobID string) (*evsmodel.ShowJobResponse, error) {
+func waitForCreateVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *evs.EvsClient, jobID string) (*evsmodel.ShowJobResponse, error) {
 	ui.Message("Waiting for create volume success...")
 	stateChange := StateChangeConf{
 		Pending:      []string{"INIT", "RUNNING"},
