@@ -69,6 +69,7 @@ type FlatImageFilterOptions struct {
 	Name       *string `mapstructure:"name" cty:"name" hcl:"name"`
 	Owner      *string `mapstructure:"owner" cty:"owner" hcl:"owner"`
 	Visibility *string `mapstructure:"visibility" cty:"visibility" hcl:"visibility"`
+	Tag        *string `mapstructure:"tag" required:"false" cty:"tag" hcl:"tag"`
 }
 
 // FlatMapstructure returns a new FlatImageFilterOptions.
@@ -86,6 +87,7 @@ func (*FlatImageFilterOptions) HCL2Spec() map[string]hcldec.Spec {
 		"name":       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"owner":      &hcldec.AttrSpec{Name: "owner", Type: cty.String, Required: false},
 		"visibility": &hcldec.AttrSpec{Name: "visibility", Type: cty.String, Required: false},
+		"tag":        &hcldec.AttrSpec{Name: "tag", Type: cty.String, Required: false},
 	}
 	return s
 }

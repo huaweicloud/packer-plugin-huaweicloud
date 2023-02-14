@@ -200,6 +200,8 @@ type ImageFilterOptions struct {
 	// Whether the image is available to other tenants. Available values include:
 	// *public*, *private*, *market*, and *shared*.
 	Visibility string `mapstructure:"visibility"`
+	// Specifies a tag added to an image. Tags can be used as a filter to query images.
+	Tag string `mapstructure:"tag" required:"false"`
 }
 
 func (f *ImageFilterOptions) Empty() bool {
@@ -229,6 +231,9 @@ func (f *ImageFilterOptions) Build() (*model.ListImagesRequest, error) {
 			return nil, err
 		}
 		opts.Imagetype = v
+	}
+	if f.Tag != "" {
+		opts.Tag = &f.Tag
 	}
 
 	return &opts, nil
