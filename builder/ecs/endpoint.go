@@ -30,6 +30,10 @@ var serviceEndpoints = map[string]ServiceCatalog{
 	},
 }
 
+func buildDefaultIamEndpoint(region string) string {
+	return fmt.Sprintf("https://iam.%s.myhuaweicloud.com", region)
+}
+
 // GetServiceEndpoint try to get the endpoint from customizing map
 func GetServiceEndpoint(cloud, srv, region string) string {
 	// get the endpoint from build-in service catalog
