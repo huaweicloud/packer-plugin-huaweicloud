@@ -26,8 +26,7 @@ import (
 )
 
 const (
-	UserAgent      = "packer-builder-huaweicloud-ecs"
-	DefaultAuthURL = "https://iam.myhuaweicloud.com:443/v3"
+	UserAgent = "packer-builder-huaweicloud-ecs"
 )
 
 // AccessConfig is for common configuration related to HuaweiCloud access
@@ -97,9 +96,9 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 	if c.IdentityEndpoint == "" {
 		c.IdentityEndpoint = os.Getenv("HW_AUTH_URL")
 	}
-	// if neither "auth_url" nor HW_AUTH_URL was specified, defaults to DefaultAuthURL
+	// if neither "auth_url" nor HW_AUTH_URL was specified, defaults to "iam.xxx.myhuaweicloud.com"
 	if c.IdentityEndpoint == "" {
-		c.IdentityEndpoint = DefaultAuthURL
+		c.IdentityEndpoint = buildDefaultIamEndpoint(c.Region)
 	}
 
 	if c.ProjectID == "" {
@@ -249,11 +248,11 @@ func (c *AccessConfig) getProjectID(region string) (string, error) {
 
 	response, err := client.KeystoneListProjects(request)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("can not get the project ID of %s: %s", c.ProjectName, err)
 	}
 
 	if response.Projects == nil || len(*response.Projects) == 0 {
-		return "", fmt.Errorf("can not find the project ID of %s", c.ProjectName)
+		return "", fmt.Errorf("can not get the project ID of %s", c.ProjectName)
 	}
 
 	queriedProjects := *response.Projects
