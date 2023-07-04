@@ -89,6 +89,13 @@
 
 - `config_drive` (bool) - Whether or not nova should use ConfigDrive for cloud-init metadata.
 
+- `spot_pricing` (bool) - If set to true, the ECS will be billed in spot price mode.
+  This mode is more cost-effective than pay-per-use, and the spot price will be adjusted based on supply-and-demand changes.
+
+- `spot_maximum_price` (string) - The highest price you are willing to pay for an ECS. This price is not lower than the current market price and
+  not higher than the pay-per-use price. When the market price is higher than your quoting or the inventory is insufficient,
+  the spot ECS will be terminated.
+
 - `volume_type` (string) - The system disk type of the instance. Defaults to `SSD`.
   For details about disk types, see
   [Disk Types and Disk Performance](https://support.huaweicloud.com/en-us/productdesc-evs/en-us_topic_0014580744.html).

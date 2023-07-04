@@ -66,8 +66,9 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	availabilityZone := state.Get("availability_zone").(string)
-	keyName := config.Comm.SSHKeyPairName
+	ui.Say(fmt.Sprintf("Launching server in AZ %s...", availabilityZone))
 
+	keyName := config.Comm.SSHKeyPairName
 	serverbody := &model.PostPaidServer{
 		Name:             s.Name,
 		ImageRef:         sourceImage,
@@ -83,11 +84,27 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		Metadata:         s.InstanceMetadata,
 	}
 
+	var chargingMode int32 = 0
+	extendparam := model.PostPaidServerExtendParam{
+		ChargingMode: &chargingMode,
+	}
+
 	if config.EnterpriseProjectId != "" {
-		serverbody.Extendparam = &model.PostPaidServerExtendParam{
-			EnterpriseProjectId: &config.EnterpriseProjectId,
+		extendparam.EnterpriseProjectId = &config.EnterpriseProjectId
+	}
+
+	if config.SpotPricing {
+		markType := "spot"
+		extendparam.MarketType = &markType
+
+		if price := config.SpotMaximumPrice; price != "" {
+			ui.Message(fmt.Sprintf("The ECS server will be billed in spot price mode with the highest price %s per hour", price))
+			extendparam.SpotPrice = &price
+		} else {
+			ui.Message("The ECS server will be billed in spot price mode")
 		}
 	}
+	serverbody.Extendparam = &extendparam
 
 	request := &model.CreatePostPaidServersRequest{
 		Body: &model.CreatePostPaidServersRequestBody{
@@ -95,7 +112,6 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		},
 	}
 
-	ui.Say(fmt.Sprintf("Launching server in AZ %s...", availabilityZone))
 	response, err := ecsClient.CreatePostPaidServers(request)
 	if err != nil {
 		state.Put("error", err)
