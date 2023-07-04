@@ -17,17 +17,20 @@ import (
 )
 
 // refer to: https://support.huaweicloud.com/intl/en-us/dns_faq/dns_faq_002.html
-var defaultDNSList = map[string][]string{
+var privateDNSList = map[string][]string{
 	"cn-north-1":     {"100.125.1.250", "100.125.21.250"},  // Beijing-1
 	"cn-north-4":     {"100.125.1.250", "100.125.129.250"}, // Beijing-4
+	"cn-north-9":     {"100.125.1.250", "100.125.107.250"}, // Ulanqab
 	"cn-east-2":      {"100.125.17.29", "100.125.135.29"},  // Shanghai-2
 	"cn-east-3":      {"100.125.1.250", "100.125.64.250"},  // Shanghai-1
 	"cn-south-1":     {"100.125.1.250", "100.125.136.29"},  // Guangzhou
+	"cn-south-4":     {"100.125.0.167"},                    // Guangzhou-InvitationOnly
 	"cn-southwest-2": {"100.125.1.250", "100.125.129.250"}, // Guiyang-1
 	"ap-southeast-1": {"100.125.1.250", "100.125.3.250"},   // Hong Kong
 	"ap-southeast-2": {"100.125.1.250", "100.125.1.251"},   // Bangkok
 	"ap-southeast-3": {"100.125.1.250", "100.125.128.250"}, // Singapore
 	"af-south-1":     {"100.125.1.250", "100.125.1.14"},    // Johannesburg
+	"tr-west-1":      {"100.125.2.250", "100.125.2.251"},   // Turkey Istanbul
 	"sa-brazil-1":    {"100.125.1.22", "100.125.1.90"},     // LA-Sao Paulo-1
 	"na-mexico-1":    {"100.125.1.22", "100.125.1.90"},     // LA-Mexico City-1
 	"la-north-2":     {"100.125.1.250", "100.125.1.242"},   // LA-Mexico City-2
@@ -220,17 +223,25 @@ func (s *StepCreateNetwork) createVPC(client *vpc.VpcClient, conf *Config) (stri
 	return vpcID, nil
 }
 
+func buildDNSList(region string) []string {
+	if dnsList, ok := privateDNSList[region]; ok {
+		return dnsList
+	}
+
+	// return public DNS: 8.8.8.8(google-public-dns-a.google.com) and 114.114.114.114(China)
+	return []string{"8.8.8.8", "114.114.114.114"}
+}
+
 func (s *StepCreateNetwork) createSubnet(client *vpc.VpcClient, vpcID, region string) (string, error) {
 	subnetName := fmt.Sprintf("subnet-packer-%s", random.AlphaNumLower(6))
+	dnsList := buildDNSList(region)
+
 	subnetOpts := model.CreateSubnetOption{
 		VpcId:     vpcID,
 		Name:      subnetName,
 		Cidr:      "172.16.0.0/24",
 		GatewayIp: "172.16.0.1",
-	}
-
-	if dnsList, ok := defaultDNSList[region]; ok {
-		subnetOpts.DnsList = &dnsList
+		DnsList:   &dnsList,
 	}
 
 	subnetRequest := &model.CreateSubnetRequest{
