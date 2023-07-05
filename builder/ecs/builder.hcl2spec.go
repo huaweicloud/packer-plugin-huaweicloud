@@ -101,6 +101,8 @@ type FlatConfig struct {
 	InstanceName              *string           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	InstanceMetadata          map[string]string `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata" hcl:"instance_metadata"`
 	ConfigDrive               *bool             `mapstructure:"config_drive" required:"false" cty:"config_drive" hcl:"config_drive"`
+	SpotPricing               *bool             `mapstructure:"spot_pricing" required:"false" cty:"spot_pricing" hcl:"spot_pricing"`
+	SpotMaximumPrice          *string           `mapstructure:"spot_maximum_price" required:"false" cty:"spot_maximum_price" hcl:"spot_maximum_price"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
 	DataVolumes               []FlatDataVolume  `mapstructure:"data_disks" required:"false" cty:"data_disks" hcl:"data_disks"`
@@ -210,6 +212,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_name":                &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"instance_metadata":            &hcldec.AttrSpec{Name: "instance_metadata", Type: cty.Map(cty.String), Required: false},
 		"config_drive":                 &hcldec.AttrSpec{Name: "config_drive", Type: cty.Bool, Required: false},
+		"spot_pricing":                 &hcldec.AttrSpec{Name: "spot_pricing", Type: cty.Bool, Required: false},
+		"spot_maximum_price":           &hcldec.AttrSpec{Name: "spot_maximum_price", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
 		"data_disks":                   &hcldec.BlockListSpec{TypeName: "data_disks", Nested: hcldec.ObjectSpec((*FlatDataVolume)(nil).HCL2Spec())},

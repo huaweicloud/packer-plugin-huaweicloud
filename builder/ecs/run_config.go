@@ -110,6 +110,13 @@ type RunConfig struct {
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
 	// Whether or not nova should use ConfigDrive for cloud-init metadata.
 	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
+	// If set to true, the ECS will be billed in spot price mode.
+	// This mode is more cost-effective than pay-per-use, and the spot price will be adjusted based on supply-and-demand changes.
+	SpotPricing bool `mapstructure:"spot_pricing" required:"false"`
+	// The highest price you are willing to pay for an ECS. This price is not lower than the current market price and
+	// not higher than the pay-per-use price. When the market price is higher than your quoting or the inventory is insufficient,
+	// the spot ECS will be terminated.
+	SpotMaximumPrice string `mapstructure:"spot_maximum_price" required:"false"`
 	// The system disk type of the instance. Defaults to `SSD`.
 	// For details about disk types, see
 	// [Disk Types and Disk Performance](https://support.huaweicloud.com/en-us/productdesc-evs/en-us_topic_0014580744.html).
