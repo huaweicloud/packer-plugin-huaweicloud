@@ -133,7 +133,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			RootVolumeSize:   b.config.VolumeSize,
 			UserData:         b.config.UserData,
 			UserDataFile:     b.config.UserDataFile,
-			ConfigDrive:      b.config.ConfigDrive,
 			InstanceMetadata: b.config.InstanceMetadata,
 		},
 		&StepAttachVolume{
