@@ -108,8 +108,6 @@ type RunConfig struct {
 	// called server properties in some documentation. The strings have a max
 	// size of 255 bytes each.
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
-	// Whether or not nova should use ConfigDrive for cloud-init metadata.
-	ConfigDrive bool `mapstructure:"config_drive" required:"false"`
 	// If set to true, the ECS will be billed in spot price mode.
 	// This mode is more cost-effective than pay-per-use, and the spot price will be adjusted based on supply-and-demand changes.
 	SpotPricing bool `mapstructure:"spot_pricing" required:"false"`

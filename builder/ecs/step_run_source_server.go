@@ -24,7 +24,6 @@ type StepRunSourceServer struct {
 	RootVolumeSize   int
 	UserData         string
 	UserDataFile     string
-	ConfigDrive      bool
 	InstanceMetadata map[string]string
 	serverID         string
 }
