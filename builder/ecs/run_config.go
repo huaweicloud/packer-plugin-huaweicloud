@@ -127,6 +127,9 @@ type RunConfig struct {
 	// The system disk size in GB. If this parameter is not specified,
 	// it is set to the minimum value of the system disk in the source image.
 	VolumeSize int `mapstructure:"volume_size" required:"false"`
+	// The ID of a KMS key used to encrypt the system disk.
+	// This parameter is only supported in some regions, such as ap-southeast-3.
+	KmsKeyID string `mapstructure:"kms_key_id" required:"false"`
 	// Add one or more data disks to the instance before creating the image.
 	// Only one of the four parameters of *volume_size*, *data_image_id*, *snapshot_id*, *volume_id*
 	// can be selected at most.
@@ -186,6 +189,8 @@ type DataVolume struct {
 	// The data disk type of the instance. Defaults to `SSD`.
 	// Available values include: *SAS*, *SSD*, *GPSSD*, and *ESSD*.
 	Type string `mapstructure:"volume_type" required:"false"`
+	// The ID of a KMS key used to encrypt when creatig a new data disk.
+	KmsKeyID string `mapstructure:"kms_key_id" required:"false"`
 }
 
 type ImageFilter struct {

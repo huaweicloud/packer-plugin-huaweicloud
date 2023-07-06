@@ -90,13 +90,13 @@ func (s *StepAttachVolume) generateVolumeName(index int) string {
 
 func attachDataVolumes(ui packer.Ui, state multistep.StateBag, ecsClient *ecs.EcsClient, disk DataVolumeWrap) error {
 	volumeId := disk.VolumeId
-	serverBody := &ecsmodel.AttachServerVolumeOption{
+	attachBody := &ecsmodel.AttachServerVolumeOption{
 		VolumeId: volumeId,
 	}
 	request := &ecsmodel.AttachServerVolumeRequest{
 		ServerId: disk.serverId,
 		Body: &ecsmodel.AttachServerVolumeRequestBody{
-			VolumeAttachment: serverBody,
+			VolumeAttachment: attachBody,
 		},
 	}
 	response, err := ecsClient.AttachServerVolume(request)
@@ -130,24 +130,31 @@ func createAndAttachVolume(ui packer.Ui, state multistep.StateBag, evsClient *ev
 		return fmt.Errorf("error parsing the data volume type %s: %s", disk.Type, err)
 	}
 
-	serverBody := &evsmodel.CreateVolumeOption{
+	volumeBody := &evsmodel.CreateVolumeOption{
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volumeType,
 		Size:             int32(disk.Size),
 		Name:             &disk.volumeName,
 	}
 	if config.EnterpriseProjectId != "" {
-		serverBody.EnterpriseProjectId = &config.EnterpriseProjectId
+		volumeBody.EnterpriseProjectId = &config.EnterpriseProjectId
 	}
 	if disk.DataImageId != "" {
-		serverBody.ImageRef = &disk.DataImageId
+		volumeBody.ImageRef = &disk.DataImageId
 	}
 	if disk.SnapshotId != "" {
-		serverBody.SnapshotId = &disk.SnapshotId
+		volumeBody.SnapshotId = &disk.SnapshotId
 	}
+	if disk.KmsKeyID != "" {
+		volumeBody.Metadata = map[string]string{
+			"__system__encrypted": "1",
+			"__system__cmkid":     disk.KmsKeyID,
+		}
+	}
+
 	request := &evsmodel.CreateVolumeRequest{
 		Body: &evsmodel.CreateVolumeRequestBody{
-			Volume:   serverBody,
+			Volume:   volumeBody,
 			ServerId: &disk.serverId,
 		},
 	}

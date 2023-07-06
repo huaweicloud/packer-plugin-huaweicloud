@@ -104,6 +104,7 @@ type FlatConfig struct {
 	SpotMaximumPrice          *string           `mapstructure:"spot_maximum_price" required:"false" cty:"spot_maximum_price" hcl:"spot_maximum_price"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
 	VolumeSize                *int              `mapstructure:"volume_size" required:"false" cty:"volume_size" hcl:"volume_size"`
+	KmsKeyID                  *string           `mapstructure:"kms_key_id" required:"false" cty:"kms_key_id" hcl:"kms_key_id"`
 	DataVolumes               []FlatDataVolume  `mapstructure:"data_disks" required:"false" cty:"data_disks" hcl:"data_disks"`
 	Vault                     *string           `mapstructure:"vault_id" required:"false" cty:"vault_id" hcl:"vault_id"`
 }
@@ -214,6 +215,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"spot_maximum_price":           &hcldec.AttrSpec{Name: "spot_maximum_price", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
 		"volume_size":                  &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
+		"kms_key_id":                   &hcldec.AttrSpec{Name: "kms_key_id", Type: cty.String, Required: false},
 		"data_disks":                   &hcldec.BlockListSpec{TypeName: "data_disks", Nested: hcldec.ObjectSpec((*FlatDataVolume)(nil).HCL2Spec())},
 		"vault_id":                     &hcldec.AttrSpec{Name: "vault_id", Type: cty.String, Required: false},
 	}
