@@ -3,6 +3,7 @@ package ecs
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -28,17 +29,20 @@ func (s *stepAddImageMembers) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	imageId := state.Get("image").(string)
-	ui.Say(fmt.Sprintf("Adding members %v to image %s", config.ImageMembers, imageId))
+	// the "image" maybe in format of "id1;id2;id3" when the image_type is data-disk or system-data
+	sharedImages := strings.Split(imageId, ";")
+	ui.Say(fmt.Sprintf("Adding members %v to image %s", config.ImageMembers, sharedImages))
 	request := &model.BatchAddMembersRequest{
 		Body: &model.BatchAddMembersRequestBody{
-			Images:   []string{imageId},
+			Images:   sharedImages,
 			Projects: config.ImageMembers,
 		},
 	}
 	if _, err := imsClient.BatchAddMembers(request); err != nil {
-		err = fmt.Errorf("Error adding member to image: %s", err)
-		state.Put("error", err)
-		return multistep.ActionHalt
+		warnMessage := fmt.Sprintf("WARN: failed to add members to image: %s", err)
+		ui.Message(warnMessage)
+		ui.Message("WARN: please share the image manually!\n")
+		return multistep.ActionContinue
 	}
 
 	if config.ImageAutoAcceptMembers {
