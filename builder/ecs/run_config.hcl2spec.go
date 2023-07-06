@@ -15,6 +15,7 @@ type FlatDataVolume struct {
 	SnapshotId  *string `mapstructure:"snapshot_id" required:"false" cty:"snapshot_id" hcl:"snapshot_id"`
 	VolumeId    *string `mapstructure:"volume_id" required:"false" cty:"volume_id" hcl:"volume_id"`
 	Type        *string `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
+	KmsKeyID    *string `mapstructure:"kms_key_id" required:"false" cty:"kms_key_id" hcl:"kms_key_id"`
 }
 
 // FlatMapstructure returns a new FlatDataVolume.
@@ -34,6 +35,7 @@ func (*FlatDataVolume) HCL2Spec() map[string]hcldec.Spec {
 		"snapshot_id":   &hcldec.AttrSpec{Name: "snapshot_id", Type: cty.String, Required: false},
 		"volume_id":     &hcldec.AttrSpec{Name: "volume_id", Type: cty.String, Required: false},
 		"volume_type":   &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
+		"kms_key_id":    &hcldec.AttrSpec{Name: "kms_key_id", Type: cty.String, Required: false},
 	}
 	return s
 }

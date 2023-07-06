@@ -131,6 +131,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SecurityGroups:   b.config.SecurityGroups,
 			RootVolumeType:   b.config.VolumeType,
 			RootVolumeSize:   b.config.VolumeSize,
+			KmsKeyID:         b.config.KmsKeyID,
 			UserData:         b.config.UserData,
 			UserDataFile:     b.config.UserDataFile,
 			InstanceMetadata: b.config.InstanceMetadata,

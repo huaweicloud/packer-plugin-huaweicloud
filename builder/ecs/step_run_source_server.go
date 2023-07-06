@@ -22,6 +22,7 @@ type StepRunSourceServer struct {
 	AvailabilityZone string
 	RootVolumeType   string
 	RootVolumeSize   int
+	KmsKeyID         string
 	UserData         string
 	UserDataFile     string
 	InstanceMetadata map[string]string
@@ -379,6 +380,15 @@ func (s *StepRunSourceServer) buildRootVolume() (*model.PostPaidServerRootVolume
 	volumeSize := int32(s.RootVolumeSize)
 	if volumeSize != 0 {
 		rootVolume.Size = &volumeSize
+	}
+
+	if s.KmsKeyID != "" {
+		encrypted := "1"
+		metadata := model.PostPaidServerRootVolumeMetadata{
+			SystemEncrypted: &encrypted,
+			SystemCmkid:     &s.KmsKeyID,
+		}
+		rootVolume.Metadata = &metadata
 	}
 
 	return &rootVolume, nil
