@@ -97,6 +97,7 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 		c.IdentityEndpoint = os.Getenv("HW_AUTH_URL")
 	}
 	// if neither "auth_url" nor HW_AUTH_URL was specified, defaults to "iam.xxx.myhuaweicloud.com"
+	// In Europe site(e.g. eu-west-101), the default endpoint is "iam.eu-west-10x.myhuaweicloud.eu"
 	if c.IdentityEndpoint == "" {
 		c.IdentityEndpoint = buildDefaultIamEndpoint(c.Region)
 	}
