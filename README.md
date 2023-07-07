@@ -60,6 +60,24 @@ official Packer documentation on [installing a plugin](https://www.packer.io/doc
 For more information on how to configure the plugin, please read the
 documentation located in the [`docs/`](docs) directory.
 
+## [Logging and Debugging](https://developer.hashicorp.com/packer/docs/debugging)
+
+### Debugging Packer in Linux
+
+```shell
+$ export HW_DEBUG=1
+$ export PACKER_LOG=1
+$ export PACKER_LOG_PATH="./packer.log"
+```
+
+### Debugging Packer in Powershell/Windows
+
+```powershell
+$env:HW_DEBUG=1
+$env:PACKER_LOG=1
+$env:PACKER_LOG_PATH="./packer.log"
+```
+
 ## Contributing
 
 * If you think you've found a bug in the code or you have a question regarding
