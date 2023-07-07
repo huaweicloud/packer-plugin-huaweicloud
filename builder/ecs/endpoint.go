@@ -31,6 +31,10 @@ var serviceEndpoints = map[string]ServiceCatalog{
 }
 
 func buildDefaultIamEndpoint(region string) string {
+	if strings.HasPrefix(region, "eu-west-10") {
+		// In Europe site(e.g. eu-west-101), the default endpoint is "iam.eu-west-10x.myhuaweicloud.eu"
+		return fmt.Sprintf("https://iam.%s.myhuaweicloud.eu", region)
+	}
 	return fmt.Sprintf("https://iam.%s.myhuaweicloud.com", region)
 }
 
