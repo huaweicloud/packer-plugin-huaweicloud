@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 	"github.com/hashicorp/packer-plugin-sdk/version"
-	ecsbuilder "github.com/huaweicloud/packer-builder-huaweicloud-ecs/builder/ecs"
+	ecsbuilder "github.com/huaweicloud/packer-builder-huaweicloud/builder/ecs"
 )
 
 var (
