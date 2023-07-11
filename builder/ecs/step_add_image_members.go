@@ -6,14 +6,14 @@ import (
 	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ims/v2/model"
 )
 
 type stepAddImageMembers struct{}
 
 func (s *stepAddImageMembers) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get("ui").(packersdk.Ui)
+	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("config").(*Config)
 
 	if len(config.ImageMembers) == 0 {
