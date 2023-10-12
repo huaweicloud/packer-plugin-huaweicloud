@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -108,6 +109,10 @@ type RunConfig struct {
 	// called server properties in some documentation. The strings have a max
 	// size of 255 bytes each.
 	InstanceMetadata map[string]string `mapstructure:"instance_metadata" required:"false"`
+	// Tags (key-value pairs) that are applied to the server instance created by Packer. Also
+	// tags are applied to the system disk of the instance. Key is no longer than 36 characters,
+	// value is no longer than 43 characters. Symbols "=*<>,|/\\" are not allowed. Key can't be empty.
+	ServerTags map[string]string `mapstructure:"server_tags" required:"false"`
 	// If set to true, the ECS will be billed in spot price mode.
 	// This mode is more cost-effective than pay-per-use, and the spot price will be adjusted based on supply-and-demand changes.
 	SpotPricing bool `mapstructure:"spot_pricing" required:"false"`
@@ -295,6 +300,32 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		}
 		if len(value) > 255 {
 			errs = append(errs, fmt.Errorf("Instance metadata value too long (max 255 bytes): %s", value))
+		}
+	}
+
+	for key, value := range c.ServerTags {
+		if len(key) > 36 {
+			errs = append(errs, fmt.Errorf("Instance server tag key too long (max 36 characters): %s", key))
+		}
+		if len(value) > 43 {
+			errs = append(errs, fmt.Errorf("Instance server tag value too long (max 43 characters): %s", value))
+		}
+		if key == "" {
+			errs = append(errs, fmt.Errorf("Instance server tag key is empty: %s", key))
+		}
+		checkString := func(inp string) int {
+			for i, ch := range inp {
+				if ch <= 32 || strings.Index("=*<>,|/\\", string(ch)) > -1 {
+					return i
+				}
+			}
+			return -1
+		}
+		if i := checkString(key); i > -1 {
+			errs = append(errs, fmt.Errorf("Instance server tag key contains invalid character '%c': %s", key[i], key))
+		}
+		if i := checkString(value); i > -1 {
+			errs = append(errs, fmt.Errorf("Instance server tag value contains invalid character '%c': %s", value[i], value))
 		}
 	}
 
