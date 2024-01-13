@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.4 (January 13, 2024)
+
+* Fix an issue when waiting an EVS volume to become available [GH-98]
+
 ## 1.0.3 (July 7, 2023)
 
 * Support filtering base images by tag [GH-78]
