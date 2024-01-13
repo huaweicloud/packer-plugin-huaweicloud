@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -72,6 +73,13 @@ func volumeJobStateRefreshFunc(client *evs.EvsClient, jobID string) StateRefresh
 		}
 
 		status := response.Status.Value()
-		return response, status, nil
+		if status == "SUCCESS" {
+			return response, status, nil
+		}
+		if status == "FAIL" {
+			return response, status, fmt.Errorf("the EVS job (%s) status is FAIL: %s",
+				jobID, *response.FailReason)
+		}
+		return response, "PENDING", nil
 	}
 }

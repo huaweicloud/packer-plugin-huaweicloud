@@ -199,7 +199,7 @@ func waitForAttachVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, clien
 func waitForCreateVolumeJobSuccess(ui packer.Ui, state multistep.StateBag, client *evs.EvsClient, jobID string) (*evsmodel.ShowJobResponse, error) {
 	ui.Message("Waiting for create volume success...")
 	stateChange := StateChangeConf{
-		Pending:      []string{"INIT", "RUNNING"},
+		Pending:      []string{"PENDING"},
 		Target:       []string{"SUCCESS"},
 		Refresh:      volumeJobStateRefreshFunc(client, jobID),
 		Timeout:      10 * time.Minute,
