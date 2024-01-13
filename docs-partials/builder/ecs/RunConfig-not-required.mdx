@@ -65,11 +65,11 @@
 
 - `ssh_ip_version` (string) - The IP version to use for SSH connections, valid values are `4` and `6`.
 
-- `vpc_id` (string) - A vpc id to attach to this instance.
+- `vpc_id` (string) - A vpc ID to attach to this instance.
 
-- `subnets` ([]string) - A list of subnets by UUID to attach to this instance.
+- `subnets` ([]string) - A list of subnet IDs to attach to this instance.
 
-- `security_groups` ([]string) - A list of security groups by name to add to this instance.
+- `security_groups` ([]string) - A list of security group IDs to add to this instance.
 
 - `user_data` (string) - User data to apply when launching the instance. Note that you need to be
   careful about escaping characters due to the templates being JSON. It is

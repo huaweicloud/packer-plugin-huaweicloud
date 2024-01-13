@@ -3,7 +3,7 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -56,7 +56,7 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 
 	userData := s.UserData
 	if s.UserDataFile != "" {
-		rawData, err := ioutil.ReadFile(s.UserDataFile)
+		rawData, err := os.ReadFile(s.UserDataFile)
 		if err != nil {
 			err = fmt.Errorf("Error reading user data file: %s", err)
 			state.Put("error", err)
