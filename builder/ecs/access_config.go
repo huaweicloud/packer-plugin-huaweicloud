@@ -59,7 +59,7 @@ type AccessConfig struct {
 	// By default this is false.
 	Insecure bool `mapstructure:"insecure" required:"false"`
 
-	cloud string
+	Cloud string
 }
 
 func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
@@ -115,19 +115,19 @@ func (c *AccessConfig) Prepare(ctx *interpolate.Context) []error {
 	if err != nil {
 		return []error{err}
 	}
-	c.cloud = cloudDomain
+	c.Cloud = cloudDomain
 
 	return nil
 }
 
 // NewHcClient is the common client using huaweicloud-sdk-go-v3 package
 func NewHcClient(c *AccessConfig, region, product string) (*core.HcHttpClient, error) {
-	endpoint := GetServiceEndpoint(c.cloud, product, region)
+	endpoint := GetServiceEndpoint(c.Cloud, product, region)
 	if endpoint == "" {
 		return nil, fmt.Errorf("failed to get the endpoint of %q service in region %s", product, region)
 	}
 
-	builder := core.NewHcHttpClientBuilder().WithEndpoint(endpoint).WithHttpConfig(buildHTTPConfig(c))
+	builder := core.NewHcHttpClientBuilder().WithEndpoints([]string{endpoint}).WithHttpConfig(buildHTTPConfig(c))
 
 	credentials := basic.Credentials{
 		AK:            c.AccessKey,

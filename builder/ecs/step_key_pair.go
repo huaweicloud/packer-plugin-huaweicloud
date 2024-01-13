@@ -3,7 +3,6 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -152,7 +151,8 @@ func berToDer(ber []byte, ui packer.Ui) []byte {
 	if err != nil {
 		return ber
 	}
-	ioutil.WriteFile(berKey.Name(), ber, os.ModeAppend)
+	os.WriteFile(berKey.Name(), ber, os.ModeAppend)
+
 	derKey, err := tmp.File("packer-der-privatekey-")
 	defer os.Remove(derKey.Name())
 	if err != nil {
@@ -166,7 +166,7 @@ func berToDer(ber []byte, ui packer.Ui) []byte {
 		return ber
 	}
 
-	der, err := ioutil.ReadFile(derKey.Name())
+	der, err := os.ReadFile(derKey.Name())
 	if err != nil {
 		return ber
 	}
