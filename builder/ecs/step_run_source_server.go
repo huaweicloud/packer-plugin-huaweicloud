@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
@@ -64,6 +65,7 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		}
 		userData = string(rawData)
 	}
+	encodedUserData := tryBase64EncodeString(userData)
 
 	availabilityZone := state.Get("availability_zone").(string)
 	ui.Say(fmt.Sprintf("Launching server in AZ %s...", availabilityZone))
@@ -80,7 +82,7 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		AvailabilityZone: &availabilityZone,
 		RootVolume:       rootVolume,
 		Publicip:         publicIP,
-		UserData:         &userData,
+		UserData:         &encodedUserData,
 		Metadata:         s.InstanceMetadata,
 	}
 
@@ -392,4 +394,13 @@ func (s *StepRunSourceServer) buildRootVolume() (*model.PostPaidServerRootVolume
 	}
 
 	return &rootVolume, nil
+}
+
+// tryBase64EncodeString will encode a string with base64.
+// If the string is already base64 encoded, returns it directly.
+func tryBase64EncodeString(str string) string {
+	if _, err := base64.StdEncoding.DecodeString(str); err != nil {
+		return base64.StdEncoding.EncodeToString([]byte(str))
+	}
+	return str
 }

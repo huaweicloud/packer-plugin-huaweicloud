@@ -309,6 +309,14 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 		c.sourceImageOpts = listOpts
 	}
 
+	// check user data file whether exists
+	if c.UserDataFile != "" {
+		_, fileErr := os.Stat(c.UserDataFile)
+		if fileErr != nil {
+			errs = append(errs, fmt.Errorf("the user data file %s is not exist", c.UserDataFile))
+		}
+	}
+
 	return errs
 }
 
