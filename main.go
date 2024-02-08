@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 	"github.com/hashicorp/packer-plugin-sdk/version"
 	ecsbuilder "github.com/huaweicloud/packer-builder-huaweicloud/builder/ecs"
+	huaweicloudimport "github.com/huaweicloud/packer-builder-huaweicloud/post-processor/huaweicloud-import"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 func main() {
 	pps := plugin.NewSet()
 	pps.RegisterBuilder("ecs", new(ecsbuilder.Builder))
+	pps.RegisterPostProcessor("import", new(huaweicloudimport.PostProcessor))
 	pps.SetVersion(PluginVersion)
 	err := pps.Run()
 	if err != nil {

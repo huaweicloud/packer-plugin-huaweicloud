@@ -28,6 +28,9 @@ var serviceEndpoints = map[string]ServiceCatalog{
 	"evs": {
 		Name: "evs",
 	},
+	"obs": {
+		Name: "obs",
+	},
 }
 
 func buildDefaultIamEndpoint(region string) string {
