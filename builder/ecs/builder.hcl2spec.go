@@ -26,6 +26,7 @@ type FlatConfig struct {
 	SecurityToken             *string           `mapstructure:"security_token" required:"false" cty:"security_token" hcl:"security_token"`
 	IdentityEndpoint          *string           `mapstructure:"auth_url" required:"false" cty:"auth_url" hcl:"auth_url"`
 	Insecure                  *bool             `mapstructure:"insecure" required:"false" cty:"insecure" hcl:"insecure"`
+	Cloud                     *string           `cty:"cloud" hcl:"cloud"`
 	ImageName                 *string           `mapstructure:"image_name" required:"true" cty:"image_name" hcl:"image_name"`
 	ImageDescription          *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
 	ImageType                 *string           `mapstructure:"image_type" required:"false" cty:"image_type" hcl:"image_type"`
@@ -137,6 +138,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"security_token":               &hcldec.AttrSpec{Name: "security_token", Type: cty.String, Required: false},
 		"auth_url":                     &hcldec.AttrSpec{Name: "auth_url", Type: cty.String, Required: false},
 		"insecure":                     &hcldec.AttrSpec{Name: "insecure", Type: cty.Bool, Required: false},
+		"cloud":                        &hcldec.AttrSpec{Name: "cloud", Type: cty.String, Required: false},
 		"image_name":                   &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_description":            &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
 		"image_type":                   &hcldec.AttrSpec{Name: "image_type", Type: cty.String, Required: false},

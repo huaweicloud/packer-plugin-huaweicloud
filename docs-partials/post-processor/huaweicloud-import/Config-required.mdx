@@ -1,0 +1,16 @@
+<!-- Code generated from the comments of the Config struct in post-processor/huaweicloud-import/post-processor.go; DO NOT EDIT MANUALLY -->
+
+- `obs_bucket_name` (string) - The name of the OBS bucket where the RAW, VHD, VMDK, or qcow2 file will be copied to for import.
+  This bucket **must** exist when the post-processor is run.
+
+- `image_name` (string) - The name of the user-defined image, which contains 1-63 characters and only
+  supports Chinese, English, numbers, '-\_,.:[]'.
+
+- `image_os_version` (string) - The OS version, such as: `CentOS 7.0 64bit`.
+  You may refer to [huaweicloud_api_docs](https://support.huaweicloud.com/intl/en-us/api-ims/ims_03_0910.html) for detail.
+
+- `min_disk` (int) - The minimum size (GB) of the system disk, the value ranges from 1 to 1024 and must be greater than the size of the image file.
+
+- `format` (string) - The format of the import image , Possible values are: `raw`, `vhd`, `vmdk`, or `qcow2`.
+
+<!-- End of code generated from the comments of the Config struct in post-processor/huaweicloud-import/post-processor.go; -->
