@@ -55,10 +55,10 @@ Upon successful compilation, a `packer-plugin-huaweicloud` plugin binary file
 can be found in the directory. To install the compiled plugin, please follow the
 official Packer documentation on [installing a plugin](https://www.packer.io/docs/extending/plugins/#installing-plugins).
 
-### Configuration
+## Configuration
 
 For more information on how to configure the plugin, please read the
-documentation located in the [`docs/`](docs) directory.
+documentation located in the [`docs/`](docs) directory or [`wiki`](https://github.com/huaweicloud/packer-plugin-huaweicloud/wiki).
 
 ## [Logging and Debugging](https://developer.hashicorp.com/packer/docs/debugging)
 
