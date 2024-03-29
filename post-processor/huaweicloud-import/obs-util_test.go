@@ -12,6 +12,11 @@ func TestUploadFileToObject(t *testing.T) {
 	region := os.Getenv("HW_REGION_NAME")
 	ak := os.Getenv("HW_ACCESS_KEY")
 	sk := os.Getenv("HW_SECRET_KEY")
+
+	if region == "" || ak == "" || sk == "" {
+		t.Skip("Skipping test because it requires some environment variables")
+	}
+
 	obsEndpoint := fmt.Sprintf("https://obs.%s.myhuaweicloud.com", region)
 	envProxyConfigure := obs.WithProxyFromEnv(true)
 
