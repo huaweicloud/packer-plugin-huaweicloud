@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.1.0 (March 29, 2024)
+
+* Support both plaint text or encoded with base64 format for `user_data` [GH-100]
+* Support **post processor**: `huaweicloud-import` [GH-101]
+
 ## 1.0.4 (January 13, 2024)
 
 * Fix an issue when waiting an EVS volume to become available [GH-98]
