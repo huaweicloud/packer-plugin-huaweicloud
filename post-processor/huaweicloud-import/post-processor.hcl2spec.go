@@ -38,6 +38,7 @@ type FlatConfig struct {
 	ImageTags             map[string]string `mapstructure:"image_tags" required:"false" cty:"image_tags" hcl:"image_tags"`
 	ImageArchitecture     *string           `mapstructure:"image_architecture" required:"false" cty:"image_architecture" hcl:"image_architecture"`
 	EnterpriseProjectId   *string           `mapstructure:"enterprise_project_id" required:"false" cty:"enterprise_project_id" hcl:"enterprise_project_id"`
+	QuickImport           *bool             `mapstructure:"quick_import" required:"false" cty:"quick_import" hcl:"quick_import"`
 	SkipClean             *bool             `mapstructure:"skip_clean" required:"false" cty:"skip_clean" hcl:"skip_clean"`
 	WaitImageReadyTimeout *string           `mapstructure:"wait_image_ready_timeout" required:"false" cty:"wait_image_ready_timeout" hcl:"wait_image_ready_timeout"`
 }
@@ -82,6 +83,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_tags":                 &hcldec.AttrSpec{Name: "image_tags", Type: cty.Map(cty.String), Required: false},
 		"image_architecture":         &hcldec.AttrSpec{Name: "image_architecture", Type: cty.String, Required: false},
 		"enterprise_project_id":      &hcldec.AttrSpec{Name: "enterprise_project_id", Type: cty.String, Required: false},
+		"quick_import":               &hcldec.AttrSpec{Name: "quick_import", Type: cty.Bool, Required: false},
 		"skip_clean":                 &hcldec.AttrSpec{Name: "skip_clean", Type: cty.Bool, Required: false},
 		"wait_image_ready_timeout":   &hcldec.AttrSpec{Name: "wait_image_ready_timeout", Type: cty.String, Required: false},
 	}

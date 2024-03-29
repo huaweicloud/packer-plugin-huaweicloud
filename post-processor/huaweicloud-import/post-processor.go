@@ -26,9 +26,17 @@ const (
 	BuilderId = "packer.post-processor.huaweicloud-import"
 
 	ImageFileFormatRAW   = "raw"
-	ImageFileFormatVHD   = "vhd"
+	ImageFileFormatVHD   = "zvhd2"
 	ImageFileFormatVMDK  = "vmdk"
 	ImageFileFormatQCOW2 = "qcow2"
+)
+
+var (
+	validImageFileFormats = []string{
+		ImageFileFormatRAW, ImageFileFormatVHD, ImageFileFormatVMDK, ImageFileFormatQCOW2,
+	}
+	validImageTypes  = []string{"ECS", "BMS"}
+	validImageArches = []string{"x86", "arm"}
 )
 
 // Configuration of this post processor
@@ -50,7 +58,7 @@ type Config struct {
 	OsVersion string `mapstructure:"image_os_version" required:"true"`
 	// The minimum size (GB) of the system disk, the value ranges from 1 to 1024 and must be greater than the size of the image file.
 	MinDisk int `mapstructure:"min_disk" required:"true"`
-	// The format of the import image , Possible values are: `raw`, `vhd`, `vmdk`, or `qcow2`.
+	// The format of the import image , Possible values are: `raw`, `zvhd2`, `vmdk` or `qcow2`.
 	Format string `mapstructure:"format" required:"true"`
 
 	// The description of the image.
@@ -64,8 +72,12 @@ type Config struct {
 	// The ID of Enterprise Project in which to create the image.
 	// If omitted, the HW_ENTERPRISE_PROJECT_ID environment variable is used.
 	EnterpriseProjectId string `mapstructure:"enterprise_project_id" required:"false"`
-	// Whether we should skip removing the RAW, VHD, VMDK, or qcow2 file uploaded to
-	// OBS after the import process has completed. Possible values are: `true` to
+	// Whether to use the quick import method to import the image. (Default: `false`).
+	// Currently, only `raw` and `zvhd2` image files are supported, and the size of an image file cannot exceed 1 TB.
+	// You are advised to import image files that are smaller than 128 GB with the common method.
+	QuickImport bool `mapstructure:"quick_import" required:"false"`
+	// Whether we should skip removing the source image file uploaded to OBS
+	// after the import process has completed. Possible values are: `true` to
 	// leave it in the OBS bucket, `false` to remove it. (Default: `false`).
 	SkipClean bool `mapstructure:"skip_clean" required:"false"`
 	// Timeout of creating the image. The timeout string is a possibly signed sequence of
@@ -120,11 +132,22 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 	// Check we have huaweicloud access variables defined somewhere
 	errs = packersdk.MultiErrorAppend(errs, p.config.AccessConfig.Prepare(&p.config.ctx)...)
 
-	switch p.config.Format {
-	case ImageFileFormatVHD, ImageFileFormatRAW, ImageFileFormatVMDK, ImageFileFormatQCOW2:
-	default:
+	if !isStringInSlice(p.config.Format, validImageFileFormats, false) {
 		errs = packersdk.MultiErrorAppend(
-			errs, fmt.Errorf("expected %s only be one of 'raw', 'vhd', 'vmdk', or 'qcow2', got %s", "format", p.config.Format))
+			errs, fmt.Errorf("expected '%s' to be one of %v, but got %s", "format",
+				validImageFileFormats, p.config.Format))
+	}
+
+	if !isStringInSlice(p.config.ImageArchitecture, validImageArches, false) {
+		errs = packersdk.MultiErrorAppend(
+			errs, fmt.Errorf("expected '%s' to be one of %v, but got %s", "image_architecture",
+				validImageArches, p.config.ImageArchitecture))
+	}
+
+	if !isStringInSlice(p.config.ImageType, validImageTypes, false) {
+		errs = packersdk.MultiErrorAppend(
+			errs, fmt.Errorf("expected '%s' to be one of %v, but got %s", "image_type",
+				validImageTypes, p.config.ImageType))
 	}
 
 	// Anything which flagged return back up the stack
@@ -199,20 +222,27 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		return nil, false, false, fmt.Errorf("failed to query bucket %s: %s", bucketName, err)
 	}
 
-	ui.Say(fmt.Sprintf("Waiting for uploading image file %s to OBS: %s/%s ...", source, bucketName, keyName))
+	ui.Say(fmt.Sprintf("Waiting for uploading image file %s to OBS %s/%s ...", source, bucketName, keyName))
 
 	// upload file to bucket
 	if err := uploadFileToObject(obsClient, bucketName, keyName, source); err != nil {
 		return nil, false, false, err
 	}
 
-	ui.Say(fmt.Sprintf("Image file %s has been uploaded to OBS: %s/%s", source, bucketName, keyName))
-	jobId, err := p.quickImportImage(imsClient, ui)
-	if err != nil {
-		return nil, false, false, fmt.Errorf("failed to import image from OBS: %s/%s, %s", bucketName, keyName, err)
+	ui.Say(fmt.Sprintf("Image file %s has been uploaded to OBS %s/%s", source, bucketName, keyName))
+
+	var jobId string
+	if p.config.QuickImport {
+		jobId, err = p.quickImportImage(imsClient, ui)
+	} else {
+		jobId, err = p.createImageFromObs(imsClient, ui)
 	}
 
-	ui.Say(fmt.Sprintf("Waiting for importing image from OBS: %s/%s ...", bucketName, keyName))
+	if err != nil {
+		return nil, false, false, fmt.Errorf("failed to import image from OBS %s/%s, %s", bucketName, keyName, err)
+	}
+
+	ui.Say(fmt.Sprintf("Waiting for importing image from OBS %s/%s ...", bucketName, keyName))
 	imageId, err := waitImageJobSuccess(imsClient, waitTimeout, jobId)
 	if err != nil {
 		return nil, false, false, fmt.Errorf("error on waiting for importing image %s from OBS %s/%s: %s",
@@ -220,7 +250,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 
 	// Add the reported huaweicloud image ID to the artifact list
-	ui.Say(fmt.Sprintf("Importing created huaweicloud image %s in region %s Complete.", imageId, p.config.Region))
+	ui.Say(fmt.Sprintf("Importing the image ID as %s in region %s completed", imageId, p.config.Region))
 	artifact = &ecsbuilder.Artifact{
 		ImageId:        imageId,
 		BuilderIdValue: BuilderId,
@@ -245,7 +275,7 @@ func (p *PostProcessor) quickImportImage(client *ims.ImsClient, ui packersdk.Ui)
 		ImageUrl:  imageUrl,
 		MinDisk:   int32(conf.MinDisk),
 		OsVersion: conf.OsVersion,
-		ImageTags: buildImageTags(conf),
+		ImageTags: buildImageTagsForImport(conf),
 	}
 
 	if conf.ImageDescription != "" {
@@ -261,6 +291,15 @@ func (p *PostProcessor) quickImportImage(client *ims.ImsClient, ui packersdk.Ui)
 			requestBody.Architecture = imageArch
 		} else {
 			ui.Message(fmt.Sprintf("The value of `image_architecture` is invalid: %s", err))
+		}
+	}
+	if conf.ImageType != "" {
+		imageType := new(model.QuickImportImageByFileRequestBodyType)
+		err := imageType.UnmarshalJSON([]byte(conf.ImageType))
+		if err == nil {
+			requestBody.Type = imageType
+		} else {
+			ui.Message(fmt.Sprintf("The value of `image_type` is invalid: %s", err))
 		}
 	}
 
@@ -280,7 +319,61 @@ func (p *PostProcessor) quickImportImage(client *ims.ImsClient, ui packersdk.Ui)
 	return *response.JobId, nil
 }
 
-func buildImageTags(conf Config) *[]model.ResourceTag {
+func (p *PostProcessor) createImageFromObs(client *ims.ImsClient, ui packersdk.Ui) (string, error) {
+	conf := p.config
+	imageUrl := fmt.Sprintf("%s:%s", conf.OBSBucket, conf.OBSObject)
+	minDisk := int32(conf.MinDisk)
+	requestBody := model.CreateImageRequestBody{
+		Name:      conf.ImageName,
+		ImageUrl:  &imageUrl,
+		MinDisk:   &minDisk,
+		OsVersion: &conf.OsVersion,
+		ImageTags: buildImageTagsForCreate(conf),
+	}
+
+	if conf.ImageDescription != "" {
+		requestBody.Description = &conf.ImageDescription
+	}
+	if conf.EnterpriseProjectId != "" {
+		requestBody.EnterpriseProjectId = &conf.EnterpriseProjectId
+	}
+	if conf.ImageArchitecture != "" {
+		imageArch := new(model.CreateImageRequestBodyArchitecture)
+		err := imageArch.UnmarshalJSON([]byte(conf.ImageArchitecture))
+		if err == nil {
+			requestBody.Architecture = imageArch
+		} else {
+			ui.Message(fmt.Sprintf("The value of `image_architecture` is invalid: %s", err))
+		}
+	}
+
+	if conf.ImageType != "" {
+		imageType := new(model.CreateImageRequestBodyType)
+		err := imageType.UnmarshalJSON([]byte(conf.ImageType))
+		if err == nil {
+			requestBody.Type = imageType
+		} else {
+			ui.Message(fmt.Sprintf("The value of `image_type` is invalid: %s", err))
+		}
+	}
+
+	request := model.CreateImageRequest{
+		Body: &requestBody,
+	}
+
+	response, err := client.CreateImage(&request)
+	if err != nil {
+		return "", err
+	}
+
+	if response.JobId == nil {
+		return "", fmt.Errorf("can not get the job from API response")
+	}
+
+	return *response.JobId, nil
+}
+
+func buildImageTagsForImport(conf Config) *[]model.ResourceTag {
 	if len(conf.ImageTags) == 0 {
 		return nil
 	}
@@ -296,6 +389,38 @@ func buildImageTags(conf Config) *[]model.ResourceTag {
 	}
 
 	return &taglist
+}
+
+func buildImageTagsForCreate(conf Config) *[]model.TagKeyValue {
+	if len(conf.ImageTags) == 0 {
+		return nil
+	}
+
+	taglist := make([]model.TagKeyValue, len(conf.ImageTags))
+	index := 0
+	for k, v := range conf.ImageTags {
+		taglist[index] = model.TagKeyValue{
+			Key:   k,
+			Value: v,
+		}
+		index++
+	}
+
+	return &taglist
+}
+
+func isStringInSlice(key string, valid []string, ignoreCase bool) bool {
+	if key == "" {
+		return true
+	}
+
+	for _, str := range valid {
+		if key == str || (ignoreCase && strings.EqualFold(key, str)) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func waitImageJobSuccess(client *ims.ImsClient, timeout time.Duration, jobID string) (string, error) {
