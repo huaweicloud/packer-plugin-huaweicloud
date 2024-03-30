@@ -258,9 +258,9 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 
 	if !p.config.SkipClean {
-		ui.Message(fmt.Sprintf("Deleting import source OBS object %s/%s", p.config.OBSObject, p.config.OBSObject))
+		ui.Message(fmt.Sprintf("Deleting import source OBS object %s/%s", bucketName, keyName))
 		if err = deleteFile(obsClient, bucketName, keyName); err != nil {
-			return nil, false, false, fmt.Errorf("failed to delete OBS object %s/%s: %s", p.config.OBSObject, p.config.OBSObject, err)
+			return nil, false, false, fmt.Errorf("failed to delete OBS object %s/%s: %s", bucketName, keyName, err)
 		}
 	}
 
