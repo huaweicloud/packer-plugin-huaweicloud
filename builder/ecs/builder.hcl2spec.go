@@ -91,6 +91,7 @@ type FlatConfig struct {
 	SourceImageFilters        *FlatImageFilter  `mapstructure:"source_image_filter" required:"false" cty:"source_image_filter" hcl:"source_image_filter"`
 	FloatingIP                *string           `mapstructure:"floating_ip" required:"false" cty:"floating_ip" hcl:"floating_ip"`
 	ReuseIPs                  *bool             `mapstructure:"reuse_ips" required:"false" cty:"reuse_ips" hcl:"reuse_ips"`
+	AssociatePublicIpAddress  *bool             `mapstructure:"associate_public_ip_address" required:"false" cty:"associate_public_ip_address" hcl:"associate_public_ip_address"`
 	EIPType                   *string           `mapstructure:"eip_type" required:"false" cty:"eip_type" hcl:"eip_type"`
 	EIPBandwidthSize          *int              `mapstructure:"eip_bandwidth_size" required:"false" cty:"eip_bandwidth_size" hcl:"eip_bandwidth_size"`
 	SSHIPVersion              *string           `mapstructure:"ssh_ip_version" required:"false" cty:"ssh_ip_version" hcl:"ssh_ip_version"`
@@ -203,6 +204,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"source_image_filter":          &hcldec.BlockSpec{TypeName: "source_image_filter", Nested: hcldec.ObjectSpec((*FlatImageFilter)(nil).HCL2Spec())},
 		"floating_ip":                  &hcldec.AttrSpec{Name: "floating_ip", Type: cty.String, Required: false},
 		"reuse_ips":                    &hcldec.AttrSpec{Name: "reuse_ips", Type: cty.Bool, Required: false},
+		"associate_public_ip_address":  &hcldec.AttrSpec{Name: "associate_public_ip_address", Type: cty.Bool, Required: false},
 		"eip_type":                     &hcldec.AttrSpec{Name: "eip_type", Type: cty.String, Required: false},
 		"eip_bandwidth_size":           &hcldec.AttrSpec{Name: "eip_bandwidth_size", Type: cty.Number, Required: false},
 		"ssh_ip_version":               &hcldec.AttrSpec{Name: "ssh_ip_version", Type: cty.String, Required: false},

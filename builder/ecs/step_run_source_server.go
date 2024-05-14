@@ -81,9 +81,11 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		SecurityGroups:   &secGroups,
 		AvailabilityZone: &availabilityZone,
 		RootVolume:       rootVolume,
-		Publicip:         publicIP,
 		UserData:         &encodedUserData,
 		Metadata:         s.InstanceMetadata,
+	}
+	if publicIP != nil {
+		serverbody.Publicip = publicIP
 	}
 
 	var chargingMode int32 = 0
@@ -353,6 +355,10 @@ func (s *StepRunSourceServer) buildSecurityGroups() []model.PostPaidServerSecuri
 }
 
 func (s *StepRunSourceServer) buildPublicIP(state multistep.StateBag) *model.PostPaidServerPublicip {
+	if _, ok := state.GetOk("access_eip"); !ok {
+		fmt.Println("access_eip is no ok")
+		return nil
+	}
 	accessEIP := state.Get("access_eip").(*PublicipIP)
 	if accessEIP == nil || accessEIP.ID == "" {
 		return nil

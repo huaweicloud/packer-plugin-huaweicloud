@@ -80,6 +80,13 @@ type RunConfig struct {
 	// in the same project while packer is running, you should not set this to true.
 	// Defaults to false.
 	ReuseIPs bool `mapstructure:"reuse_ips" required:"false"`
+	// Whether or not allow to create temporary EIP or use specified EIP.
+	// Valid values are true and false, default to true.
+	// > [!NOTE]
+	// > If `associate_public_ip_address` is set to 'false', it is necessary for you to provide `vpc_id`,
+	// > `subnets` and `security_groups`.
+	// > And please ensure that the network of the server executing Packer is interconnected with them.
+	AssociatePublicIpAddress *bool `mapstructure:"associate_public_ip_address" required:"false"`
 	// The type of EIP. See the api doc to get the value.
 	EIPType string `mapstructure:"eip_type" required:"false"`
 	// The size of EIP bandwidth.
@@ -279,6 +286,16 @@ func (c *RunConfig) Prepare(ctx *interpolate.Context) []error {
 
 	if c.Flavor == "" {
 		errs = append(errs, errors.New("A flavor must be specified"))
+	}
+
+	if c.AssociatePublicIpAddress == nil {
+		b := true
+		c.AssociatePublicIpAddress = &b
+
+	} else if !*c.AssociatePublicIpAddress {
+		if c.EIPType != "" || c.EIPBandwidthSize != 0 || c.FloatingIP != "" || c.ReuseIPs != false {
+			errs = append(errs, errors.New("EIP is denied to use"))
+		}
 	}
 
 	if c.SSHIPVersion != "" && c.SSHIPVersion != "4" && c.SSHIPVersion != "6" {

@@ -59,6 +59,13 @@
   in the same project while packer is running, you should not set this to true.
   Defaults to false.
 
+- `associate_public_ip_address` (bool) - Whether or not allow to create temporary EIP or use specified EIP.
+  Valid values are true and false, default to true.
+  > [!NOTE]
+  > If `associate_public_ip_address` is set to 'false', it is necessary for you to provide `vpc_id`,
+  > `subnets` and `security_groups`.
+  > And please ensure that the network of the server executing Packer is interconnected with them.
+
 - `eip_type` (string) - The type of EIP. See the api doc to get the value.
 
 - `eip_bandwidth_size` (int) - The size of EIP bandwidth.

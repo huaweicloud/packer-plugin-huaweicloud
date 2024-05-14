@@ -158,3 +158,105 @@ build {
 
 </Tab>
 </Tabs>
+
+
+## Use Private Ip Example
+
+Here is an use private ip example for HuaweiCloud.
+
+> [!NOTE]
+> In the template, you need to provide the `vpc_id`, `subnets` and `security_groups`.
+> Please ensure that the network of the server executing Packer is interconnected with them.
+
+<Tabs>
+<Tab heading="JSON">
+
+{
+    "builders": [
+        {
+            "type": "huaweicloud-ecs",
+            "access_key": "{{ my-access-key }}",
+            "secret_key": "{{ my-secret-key }}",
+            "region": "cn-north-1",
+            "image_name": "{{ image_name }}",
+            "source_image": "{{ source_image }}",
+            "flavor": "s6.large.2",
+            "vpc_id": "{{ vpc_id }}",
+            "subnets": ["{{ sunbet_id }}"],
+            "security_groups": [
+            "{{ security_group }}"
+            ],
+            "associate_public_ip_address": false,
+            "ssh_username": "root",
+            "ssh_ip_version": "4",
+        }
+    ],
+
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+            "echo \"start install nginx, sleep 20s first\"",
+            "sleep 20",
+            "echo \"run install\"",
+            "yum -y install nginx",
+            "echo \"enable nginx\"",
+            "systemctl enable nginx.service",
+            "echo \"install nginx done\""
+            ]
+        }
+    ]
+}
+
+</Tab>
+</Tabs>
+
+
+<Tabs>
+<Tab heading="HCL2">
+
+variable "access_key" {
+    type = string
+}
+variable "secret_key" {
+    type = string
+}
+variable "source_image_id" {
+    type = string
+}
+
+source "huaweicloud-ecs" "priviate-ip-example" {
+    region       = "cn-north-1"
+    access_key   = var.access_key
+    secret_key   = var.secret_key
+    flavor       = "s6.large.2"
+    image_name   = "packer-image-priviate-ip"
+    source_image = var.source_image_id
+
+    vpc_id          = "abcde123-abcd-1234-1234-123456789abc"
+    subnets         = ["abcde123-abcd-1234-1234-123456789abc"]
+    security_groups = ["abcde123-abcd-1234-1234-123456789abc"]
+
+    associate_public_ip_address = false
+    ssh_ip_version              = "4"
+    ssh_username                = "root"
+}
+
+build {
+    sources = ["source.huaweicloud-ecs.basic-example"]
+
+    provisioner "shell" {
+    inline = [
+        "echo \"start install nginx, sleep 20s first\"",
+        "sleep 20",
+        "echo \"run install\"",
+        "apt install -y nginx",
+        "echo \"enable nginx\"",
+        "systemctl enable nginx.service",
+        "echo \"install nginx done\""
+        ]
+    }
+}
+
+</Tab>
+</Tabs>

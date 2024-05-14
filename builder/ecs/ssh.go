@@ -15,8 +15,8 @@ func CommHost(host string) func(multistep.StateBag) (string, error) {
 		}
 
 		// if we have a floating IP, use that
-		publicIP := state.Get("access_eip").(*PublicipIP)
-		if publicIP != nil && publicIP.Address != "" {
+		if rst, ok := state.GetOk("access_eip"); ok {
+			publicIP := rst.(*PublicipIP)
 			log.Printf("[DEBUG] Using floating IP %s to connect", publicIP.Address)
 			return publicIP.Address, nil
 		}

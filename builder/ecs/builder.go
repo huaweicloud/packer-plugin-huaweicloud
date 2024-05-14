@@ -92,6 +92,33 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	state.Put("ui", ui)
 
 	// Build the steps
+	steps := b.buildExecuteSteps()
+
+	// Run!
+	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
+	b.runner.Run(ctx, state)
+
+	// If there was an error, return that
+	if rawErr, ok := state.GetOk("error"); ok {
+		return nil, rawErr.(error)
+	}
+
+	// If there are no images, then just return
+	if _, ok := state.GetOk("image"); !ok {
+		return nil, nil
+	}
+
+	// Build the artifact and return it
+	artifact := &Artifact{
+		ImageId:        state.Get("image").(string),
+		BuilderIdValue: BuilderId,
+		Client:         imsClient,
+	}
+
+	return artifact, nil
+}
+
+func (b *Builder) buildExecuteSteps() []multistep.Step {
 	steps := []multistep.Step{
 		&StepLoadAZ{
 			AvailabilityZone: b.config.AvailabilityZone,
@@ -118,12 +145,19 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Subnets:        b.config.Subnets,
 			SecurityGroups: b.config.SecurityGroups,
 		},
-		&StepCreatePublicipIP{
+	}
+
+	if b.config.AssociatePublicIpAddress == nil || *b.config.AssociatePublicIpAddress {
+		eip := &StepCreatePublicipIP{
 			PublicipIP:       b.config.FloatingIP,
 			ReuseIPs:         b.config.ReuseIPs,
 			EIPType:          b.config.EIPType,
 			EIPBandwidthSize: b.config.EIPBandwidthSize,
-		},
+		}
+		steps = append(steps, eip)
+	}
+
+	nextSteps := []multistep.Step{
 		&StepRunSourceServer{
 			Name:             b.config.InstanceName,
 			VpcID:            b.config.VpcID,
@@ -158,31 +192,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		},
 		&stepAddImageMembers{},
 	}
+	steps = append(steps, nextSteps...)
 
-	// Run!
-	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
-	b.runner.Run(ctx, state)
-
-	// If there was an error, return that
-	if rawErr, ok := state.GetOk("error"); ok {
-		return nil, rawErr.(error)
-	}
-
-	// If there are no images, then just return
-	if _, ok := state.GetOk("image"); !ok {
-		return nil, nil
-	}
-
-	// Build the artifact and return it
-	artifact := &Artifact{
-		ImageId:        state.Get("image").(string),
-		BuilderIdValue: BuilderId,
-		Client:         imsClient,
-	}
-
-	return artifact, nil
+	return steps
 }
-
 func calculateAndValidateImageType(b *Builder) (string, error) {
 	imageType := b.config.ImageType
 
