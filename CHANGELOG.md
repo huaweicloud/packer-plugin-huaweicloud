@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.0 (May 23, 2024)
+
+# Support using private IP to login and install software.
+
 ## 1.1.0 (March 29, 2024)
 
 * Support both plaint text or encoded with base64 format for `user_data` [GH-100]
@@ -12,7 +16,7 @@
 ## 1.0.3 (July 7, 2023)
 
 * Support filtering base images by tag [GH-78]
-* Suport TR-Istanbul region for private DNS and add default public DNS for other regions [GH-83]
+* Support TR-Istanbul region for private DNS and add default public DNS for other regions [GH-83]
 * Support spot price mode when creating ECS [GH-84]
 * Support encryption for system disk and data disks [GH-87]
 * Support eu-west-101 region [GH-88]
