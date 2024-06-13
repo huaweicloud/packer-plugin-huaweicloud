@@ -27,6 +27,7 @@ type StepRunSourceServer struct {
 	UserData         string
 	UserDataFile     string
 	InstanceMetadata map[string]string
+	ServerTags       map[string]string
 	serverID         string
 }
 
@@ -70,6 +71,11 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 	availabilityZone := state.Get("availability_zone").(string)
 	ui.Say(fmt.Sprintf("Launching server in AZ %s...", availabilityZone))
 
+	serverTags := make([]model.PostPaidServerTag, 0, len(s.ServerTags))
+	for key, value := range s.ServerTags {
+		serverTags = append(serverTags, model.PostPaidServerTag{Key: key, Value: value})
+	}
+
 	keyName := config.Comm.SSHKeyPairName
 	serverbody := &model.PostPaidServer{
 		Name:             s.Name,
@@ -83,6 +89,7 @@ func (s *StepRunSourceServer) Run(ctx context.Context, state multistep.StateBag)
 		RootVolume:       rootVolume,
 		UserData:         &encodedUserData,
 		Metadata:         s.InstanceMetadata,
+		ServerTags:       &serverTags,
 	}
 	if publicIP != nil {
 		serverbody.Publicip = publicIP

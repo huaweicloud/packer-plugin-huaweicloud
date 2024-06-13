@@ -102,6 +102,7 @@ type FlatConfig struct {
 	UserDataFile              *string           `mapstructure:"user_data_file" required:"false" cty:"user_data_file" hcl:"user_data_file"`
 	InstanceName              *string           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	InstanceMetadata          map[string]string `mapstructure:"instance_metadata" required:"false" cty:"instance_metadata" hcl:"instance_metadata"`
+	ServerTags                map[string]string `mapstructure:"server_tags" required:"false" cty:"server_tags" hcl:"server_tags"`
 	SpotPricing               *bool             `mapstructure:"spot_pricing" required:"false" cty:"spot_pricing" hcl:"spot_pricing"`
 	SpotMaximumPrice          *string           `mapstructure:"spot_maximum_price" required:"false" cty:"spot_maximum_price" hcl:"spot_maximum_price"`
 	VolumeType                *string           `mapstructure:"volume_type" required:"false" cty:"volume_type" hcl:"volume_type"`
@@ -215,6 +216,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"user_data_file":               &hcldec.AttrSpec{Name: "user_data_file", Type: cty.String, Required: false},
 		"instance_name":                &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"instance_metadata":            &hcldec.AttrSpec{Name: "instance_metadata", Type: cty.Map(cty.String), Required: false},
+		"server_tags":                  &hcldec.AttrSpec{Name: "server_tags", Type: cty.Map(cty.String), Required: false},
 		"spot_pricing":                 &hcldec.AttrSpec{Name: "spot_pricing", Type: cty.Bool, Required: false},
 		"spot_maximum_price":           &hcldec.AttrSpec{Name: "spot_maximum_price", Type: cty.String, Required: false},
 		"volume_type":                  &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},

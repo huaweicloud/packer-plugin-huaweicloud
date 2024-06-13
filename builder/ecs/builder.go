@@ -169,6 +169,7 @@ func (b *Builder) buildExecuteSteps() []multistep.Step {
 			UserData:         b.config.UserData,
 			UserDataFile:     b.config.UserDataFile,
 			InstanceMetadata: b.config.InstanceMetadata,
+			ServerTags:       b.config.ServerTags,
 		},
 		&StepAttachVolume{
 			PrefixName: b.config.InstanceName,
