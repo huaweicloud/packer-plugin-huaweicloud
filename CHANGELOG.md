@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.1 (July 18, 2024)
+
+* Fix the issue encountered in manual installation [#111](https://github.com/huaweicloud/packer-plugin-huaweicloud/issues/111).
+
 ## 1.2.0 (May 23, 2024)
 
 # Support using private IP to login and install software.
