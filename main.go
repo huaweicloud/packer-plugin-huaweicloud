@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 	"github.com/hashicorp/packer-plugin-sdk/version"
@@ -12,16 +13,16 @@ import (
 
 var (
 	// Version is the main version number that is being run at the moment.
-	Version = "0.4.0"
+	Version = "1.2.0"
 
 	// VersionPrerelease is A pre-release marker for the Version. If this is ""
 	// (empty string) then it means that it is a final release. Otherwise, this
 	// is a pre-release such as "dev" (in development), "beta", "rc1", etc.
-	VersionPrerelease = "rc1"
+	VersionPrerelease = ""
 
 	// PluginVersion is used by the plugin set to allow Packer to recognize
 	// what version this plugin is.
-	PluginVersion = version.InitializePluginVersion(Version, VersionPrerelease)
+	PluginVersion = version.InitializePluginVersion(strings.TrimLeft(strings.ToLower(Version), "v"), VersionPrerelease)
 )
 
 func main() {
