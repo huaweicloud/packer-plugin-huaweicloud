@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/tmp"
+	"github.com/hashicorp/packer-plugin-sdk/uuid"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
@@ -36,7 +37,58 @@ func (s *StepKeyPair) Run(ctx context.Context, state multistep.StateBag) multist
 			return multistep.ActionHalt
 		}
 
+		key, err := ssh.ParsePrivateKey(privateKeyBytes)
+		if err != nil {
+			err = fmt.Errorf("Error parsing 'ssh_private_key_file': %s", err)
+			ui.Error(err.Error())
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
+
+		config := state.Get("config").(*Config)
+		region := config.Region
+		ecsClient, err := config.HcEcsClient(region)
+		if err != nil {
+			err = fmt.Errorf("Error initializing compute client: %s", err)
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
+
+		s.Comm.SSHTemporaryKeyPairName = fmt.Sprintf("packer_%s", uuid.TimeOrderedUUID())
+		kpName := s.Comm.SSHTemporaryKeyPairName
+		ui.Say(fmt.Sprintf("Creating temporary keypair using provided private key: %s...", kpName))
+
+		strPubKey := string(ssh.MarshalAuthorizedKey(key.PublicKey()))
+		keypairbody := &model.NovaCreateKeypairOption{
+			Name:      kpName,
+			PublicKey: &strPubKey,
+		}
+		request := &model.NovaCreateKeypairRequest{
+			Body: &model.NovaCreateKeypairRequestBody{
+				Keypair: keypairbody,
+			},
+		}
+
+		response, err := ecsClient.NovaCreateKeypair(request)
+		if err != nil {
+			state.Put("error", fmt.Errorf("Error creating temporary keypair: %s", err))
+			return multistep.ActionHalt
+		}
+
+		if response.Keypair == nil || response.Keypair.Fingerprint == "" {
+			state.Put("error", fmt.Errorf("The temporary keypair returned was blank"))
+			return multistep.ActionHalt
+		}
+
+		ui.Say(fmt.Sprintf("Created temporary keypair: %s", kpName))
+
+		// we created a temporary key, so remember to clean it up
+		s.doCleanup = true
+
+		// Set some state data for use in future steps
+		s.Comm.SSHKeyPairName = kpName
 		s.Comm.SSHPrivateKey = privateKeyBytes
+		s.Comm.SSHPublicKey = ssh.MarshalAuthorizedKey(key.PublicKey())
 
 		return multistep.ActionContinue
 	}
