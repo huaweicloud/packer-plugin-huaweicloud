@@ -94,6 +94,10 @@
   called server properties in some documentation. The strings have a max
   size of 255 bytes each.
 
+- `server_tags` (map[string]string) - Tags (key-value pairs) that are applied to the server instance created by Packer. Also
+  tags are applied to the system disk of the instance. Key is no longer than 36 characters,
+  value is no longer than 43 characters. Symbols "=*<>,|/\\" are not allowed. Key can't be empty.
+
 - `spot_pricing` (bool) - If set to true, the ECS will be billed in spot price mode.
   This mode is more cost-effective than pay-per-use, and the spot price will be adjusted based on supply-and-demand changes.
 
