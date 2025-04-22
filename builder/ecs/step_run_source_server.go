@@ -346,8 +346,9 @@ func (s *StepRunSourceServer) buildSecurityGroups() []model.PostPaidServerSecuri
 			continue
 		}
 
+		currentID := id
 		secGroups = append(secGroups, model.PostPaidServerSecurityGroup{
-			Id: &id,
+			Id: &currentID,
 		})
 	}
 
