@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.2 (August 24, 2025)
+
+* Fix the version inconsistency issue after build.
+
 ## 1.2.1 (July 18, 2024)
 
 * Fix the issue encountered in manual installation [#111](https://github.com/huaweicloud/packer-plugin-huaweicloud/issues/111).

@@ -7,13 +7,14 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 	"github.com/hashicorp/packer-plugin-sdk/version"
+
 	ecsbuilder "github.com/huaweicloud/packer-builder-huaweicloud/builder/ecs"
 	huaweicloudimport "github.com/huaweicloud/packer-builder-huaweicloud/post-processor/huaweicloud-import"
 )
 
 var (
 	// Version is the main version number that is being run at the moment.
-	Version = "1.2.0"
+	Version = ""
 
 	// VersionPrerelease is A pre-release marker for the Version. If this is ""
 	// (empty string) then it means that it is a final release. Otherwise, this
@@ -26,6 +27,10 @@ var (
 )
 
 func main() {
+	if os.Getenv("PACKER_ACC") != "" {
+		fmt.Printf("Version %s-%s\n", Version, VersionPrerelease)
+	}
+
 	pps := plugin.NewSet()
 	pps.RegisterBuilder("ecs", new(ecsbuilder.Builder))
 	pps.RegisterPostProcessor("import", new(huaweicloudimport.PostProcessor))
